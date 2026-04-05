@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Se connecter</title>
+    <style>
+        :root {
+            --ink:#102a43;
+            --teal:#0f766e;
+            --sun:#ffb703;
+            --bg:#f4fbfb;
+            --card:#ffffff;
+            --muted:#627d98;
+            --line:#d9e2ec;
+        }
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:"Segoe UI",sans-serif; color:var(--ink); background:linear-gradient(180deg,#fefaf0 0%,var(--bg)100%); }
+        .page { width:min(520px,calc(100% - 32px)); margin:0 auto; padding:28px 0 56px; }
+        .card { background:var(--card); border-radius:28px; padding:28px; box-shadow:0 18px 40px rgba(16,42,67,.08); border:1px solid rgba(16,42,67,.08); }
+        h1 { margin:0 0 12px; font-size:2.2rem; }
+        p { color:var(--muted); line-height:1.7; margin:0 0 24px; }
+        .field { display:grid; gap:8px; margin-bottom:18px; }
+        label { font-weight:700; }
+        input { width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:#f8fafb; color:var(--ink); }
+        .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; border-radius:14px; font-weight:700; border:0; cursor:pointer; text-decoration:none; }
+        .btn-primary { background:linear-gradient(135deg,var(--teal),#14b8a6); color:#fff; }
+        .btn-secondary { background:#fff; color:var(--ink); border:1px solid rgba(16,42,67,.12); }
+        .error { color:#b42318; margin-bottom:12px; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="card">
+            <h1>Se connecter</h1>
+            <p>Comptes demo : admin/admin, organisateur/organisateur, participant/participant.</p>
+            <form>
+                <div class="field">
+                    <label for="username">Nom d utilisateur</label>
+                    <input id="username" name="username" type="text" placeholder="Nom d utilisateur" required>
+                </div>
+                <div class="field">
+                    <label for="password">Mot de passe</label>
+                    <input id="password" name="password" type="password" placeholder="Mot de passe" required>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" type="submit">Connexion</button>
+                    <a class="btn btn-secondary" href="register.html">S inscrire</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

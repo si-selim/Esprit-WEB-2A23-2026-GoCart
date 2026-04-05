@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creer un compte participant</title>
+    <style>
+        :root {
+            --ink:#102a43;
+            --teal:#0f766e;
+            --sun:#ffb703;
+            --bg:#f4fbfb;
+            --card:#ffffff;
+            --muted:#627d98;
+            --line:#d9e2ec;
+        }
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:"Segoe UI",sans-serif; color:var(--ink); background:linear-gradient(180deg,#fefaf0 0%,var(--bg)100%); }
+        .page { width:min(980px,calc(100% - 32px)); margin:0 auto; padding:28px 0 56px; }
+        .card { background:var(--card); border-radius:28px; padding:28px; box-shadow:0 18px 40px rgba(16,42,67,.08); border:1px solid rgba(16,42,67,.08); }
+        h1 { margin:0 0 12px; font-size:2.2rem; }
+        p { color:var(--muted); line-height:1.7; margin:0 0 24px; }
+        .grid { display:grid; gap:18px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .field { display:grid; gap:8px; }
+        label { font-weight:700; }
+        input, select { width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:#f8fafb; color:var(--ink); }
+        .full-width { grid-column:1 / -1; }
+        .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; border-radius:14px; font-weight:700; border:0; cursor:pointer; text-decoration:none; }
+        .btn-primary { background:linear-gradient(135deg,var(--teal),#14b8a6); color:#fff; }
+        .btn-secondary { background:#fff; color:var(--ink); border:1px solid rgba(16,42,67,.12); }
+        @media (max-width:760px) { .grid { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="card">
+            <h1>Creer un compte participant</h1>
+            <p>Formulaire d inscription pour creer un nouveau compte participant. Aucun controle de saisie n est applique ici.</p>
+            <form>
+                <div class="grid">
+                    <div class="field full-width">
+                        <label for="name">Nom complet</label>
+                        <input id="name" name="name" type="text" placeholder="Nom complet">
+                    </div>
+                    <div class="field">
+                        <label for="username">Nom d utilisateur</label>
+                        <input id="username" name="username" type="text" placeholder="Nom d utilisateur">
+                    </div>
+                    <div class="field">
+                        <label for="password">Mot de passe</label>
+                        <input id="password" name="password" type="password" placeholder="Mot de passe">
+                    </div>
+                    <div class="field">
+                        <label for="age">Age</label>
+                        <input id="age" name="age" type="number" placeholder="25" min="1">
+                    </div>
+                    <div class="field">
+                        <label for="weight">Poids (kg)</label>
+                        <input id="weight" name="weight" type="number" placeholder="70" min="1" step="0.1">
+                    </div>
+                    <div class="field">
+                        <label for="height">Taille (cm)</label>
+                        <input id="height" name="height" type="number" placeholder="175" min="1" step="0.1">
+                    </div>
+                    <div class="field">
+                        <label for="email">Email</label>
+                        <input id="email" name="email" type="email" placeholder="participant@email.com">
+                    </div>
+                    <div class="field">
+                        <label for="country">Pays</label>
+                        <input id="country" name="country" type="text" placeholder="Tunisie">
+                    </div>
+                    <div class="field">
+                        <label for="city">Ville / adresse exacte</label>
+                        <input id="city" name="city" type="text" placeholder="Tunis">
+                    </div>
+                    <div class="field">
+                        <label for="phone">Telephone</label>
+                        <input id="phone" name="phone" type="tel" placeholder="0612345678">
+                    </div>
+                    <div class="field">
+                        <label for="occupation">Occupation</label>
+                        <select id="occupation" name="occupation">
+                            <option value="">Que faites-vous dans la vie ?</option>
+                            <option value="Etudiant">Etudiant</option>
+                            <option value="Employe">Employe</option>
+                            <option value="Retraite">Retraite</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" type="submit">Confirmer</button>
+                    <a class="btn btn-secondary" href="login.html">Retour</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
