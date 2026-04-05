@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Back Office - Sponsors</title>
+    <style>
+        :root {
+            --ink:#102a43;
+            --teal:#0f766e;
+            --sun:#ffb703;
+            --bg:#f4fbfb;
+            --card:#ffffff;
+            --muted:#627d98;
+            --coral:#e76f51;
+            --line:#d9e2ec;
+            --nav:#0b2032;
+        }
+        * { box-sizing:border-box; }
+        html, body { margin:0; min-height:100%; }
+        body {
+            font-family: "Segoe UI", sans-serif;
+            color: var(--ink);
+            background: linear-gradient(180deg, #fefaf0 0%, var(--bg) 100%);
+        }
+        .layout { min-height:100vh; display:grid; grid-template-columns:280px 1fr; }
+        .sidebar {
+            background: linear-gradient(180deg, #0b2032 0%, #12314a 100%);
+            color: #fff;
+            padding: 28px 22px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .brand { display:grid; gap:10px; padding-bottom:20px; border-bottom:1px solid rgba(255,255,255,.14); }
+        .brand-badge { width:52px; height:52px; border-radius:18px; object-fit:cover; }
+        .brand small, .side-note { color:rgba(255,255,255,.72); }
+        .side-nav { display:grid; gap:10px; }
+        .side-link {
+            text-decoration:none;
+            color:#fff;
+            border:1px solid rgba(255,255,255,.1);
+            background:rgba(255,255,255,.05);
+            border-radius:16px;
+            padding:12px 14px;
+            font-weight:700;
+        }
+        .side-link.active { background:linear-gradient(135deg,var(--teal),#14b8a6); }
+        .content { padding:28px; }
+        .head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:24px; }
+        .head h1 { margin:0; font-size:2.2rem; }
+        .muted { color:var(--muted); line-height:1.65; max-width:760px; }
+        .actions { display:flex; flex-wrap:wrap; gap:12px; }
+        .btn { text-decoration:none; padding:11px 16px; border-radius:14px; font-weight:700; border:0; cursor:pointer; display:inline-flex; align-items:center; gap:8px; }
+        .btn-primary { background:var(--teal); color:#fff; }
+        .btn-secondary { background:#fff; color:var(--ink); border:1px solid rgba(16,42,67,.1); }
+        .btn-export { background: #102a43; color:#fff; }
+        .grid { display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); margin-bottom:24px; }
+        .card, .section-card { background:var(--card); border-radius:24px; padding:22px; box-shadow:0 14px 34px rgba(16,42,67,.08); border:1px solid rgba(16,42,67,.08); }
+        .section-title { margin:0 0 14px; font-size:1.45rem; }
+        .table-shell { overflow:auto; }
+        table { width:100%; min-width:880px; border-collapse:collapse; background:#fff; }
+        th, td { padding:14px 12px; text-align:left; border-bottom:1px solid #e6edf3; vertical-align:top; }
+        th { background:#102a43; color:#fff; position:sticky; top:0; }
+        .tag { display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(15,118,110,.12); color:var(--teal); font-weight:800; font-size:.86rem; }
+        .toolbar { display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; margin-bottom:18px; align-items:center; }
+        .toolbar-row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+        .search-box { flex:1; min-width:240px; display:flex; gap:10px; }
+        .search-box input, .filter-group select { width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:#f8fafb; color:var(--ink); }
+        .filter-group { display:flex; gap:12px; flex-wrap:wrap; }
+        .filter-group label { display:flex; flex-direction:column; gap:6px; font-size:.92rem; color:var(--muted); }
+        .section-actions { margin-top:16px; display:flex; justify-content:flex-end; }
+        .section-note { font-size:.95rem; color:var(--muted); margin-top:6px; }
+        .mobile-nav { display:none; }
+        @media (max-width: 980px) {
+            .layout { grid-template-columns:1fr; }
+            .sidebar { display:none; }
+            .mobile-nav { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px; }
+            .content { padding:20px; }
+            .head { flex-direction:column; }
+            .toolbar { flex-direction:column; align-items:flex-start; }
+            .search-box, .filter-group { width:100%; }
+            table { min-width:720px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand">
+                <img class="brand-badge" src="../assets/images/logo_barchathon.jpg" alt="Logo Barchathon">
+                <div>
+                    <strong>Admin Back Office</strong><br>
+                    <small>Gestion des sponsors et rapports</small>
+                </div>
+            </div>
+            <nav class="side-nav">
+                <a class="side-link" href="dashboard.html">Dashboard</a>
+                <a class="side-link active" href="backoffice_Sponsor.html">Sponsors</a>
+                <a class="side-link" href="#">Marathons</a>
+                <a class="side-link" href="#">Participants</a>
+                <a class="side-link" href="#">Paramètres</a>
+            </nav>
+            <div class="side-note">
+                Consultation des données des sponsors, sponsoring et fourniture. Pas de modification sur cette page.
+            </div>
+        </aside>
+        <main class="content">
+            <div class="mobile-nav">
+                <a class="btn btn-secondary" href="dashboard.html">Dashboard</a>
+                <a class="btn btn-primary" href="backoffice_Sponsor.html">Sponsors</a>
+            </div>
+            <div class="head">
+                <div>
+                    <h1>Section sponsors</h1>
+                    <div class="muted">Vue administrative simple pour consulter les tables des sponsors, des sponsoring et des fournitures. Recherche, filtres et export statique sont disponibles.</div>
+                </div>
+                <div class="actions">
+                    <span class="tag">Lecture seule</span>
+                    <span class="tag">Backoffice</span>
+                </div>
+            </div>
+            <section class="section-card">
+                <h2 class="section-title">Sponsors</h2>
+                <div class="toolbar">
+                    <div class="search-box">
+                        <input type="search" placeholder="Rechercher un sponsor, un email ou une adresse">
+                    </div>
+                    <div class="filter-group">
+                        <label>
+                            Filtrer par type
+                            <select>
+                                <option>Tout</option>
+                                <option>Or</option>
+                                <option>Argent</option>
+                                <option>Bronze</option>
+                            </select>
+                        </label>
+                        <label>
+                            Filtrer par pays
+                            <select>
+                                <option>Tout</option>
+                                <option>France</option>
+                                <option>Belgique</option>
+                                <option>Maroc</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div class="table-shell">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nom</th>
+                                <th>Type</th>
+                                <th>Adresse</th>
+                                <th>Contact</th>
+                                <th>Email</th>
+                                <th>Logo</th>
+                                <th>PageWeb</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>101</td>
+                                <td>GreenFit</td>
+                                <td>Or</td>
+                                <td>23 rue des Lilas, Lyon</td>
+                                <td>0612345678</td>
+                                <td>contact@greenfit.fr</td>
+                                <td>greenfit.svg</td>
+                                <td>greenfit.fr</td>
+                            </tr>
+                            <tr>
+                                <td>102</td>
+                                <td>RunWear</td>
+                                <td>Argent</td>
+                                <td>14 avenue du Stade, Paris</td>
+                                <td>0678123456</td>
+                                <td>support@runwear.com</td>
+                                <td>runwear.png</td>
+                                <td>runwear.com</td>
+                            </tr>
+                            <tr>
+                                <td>103</td>
+                                <td>MedikPro</td>
+                                <td>Bronze</td>
+                                <td>8 Boulevard de la Santé, Lille</td>
+                                <td>0645781230</td>
+                                <td>info@medikpro.fr</td>
+                                <td>medikpro.jpg</td>
+                                <td>medikpro.fr</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="section-actions">
+                    <button class="btn btn-export">Exporter sponsors</button>
+                </div>
+                <div class="section-note">Affichage statique de la table des sponsors. Les actions de modification sont désactivées.</div>
+            </section>
+            <section class="section-card" style="margin-top:24px;">
+                <h2 class="section-title">Sponsoring</h2>
+                <div class="toolbar">
+                    <div class="search-box">
+                        <input type="search" placeholder="Rechercher un sponsoring ou un état">
+                    </div>
+                    <div class="filter-group">
+                        <label>
+                            Filtrer par état
+                            <select>
+                                <option>Tout</option>
+                                <option>Actif</option>
+                                <option>Terminé</option>
+                                <option>Planifié</option>
+                            </select>
+                        </label>
+                        <label>
+                            Filtrer par montant
+                            <select>
+                                <option>Tout</option>
+                                <option>0-5k</option>
+                                <option>5k-15k</option>
+                                <option>> 15k</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div class="table-shell">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nom Sponsoring</th>
+                                <th>Date début</th>
+                                <th>Date fin</th>
+                                <th>Montant</th>
+                                <th>État</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>201</td>
+                                <td>Pack Performance</td>
+                                <td>2026-04-01</td>
+                                <td>2026-10-01</td>
+                                <td>12000,00 €</td>
+                                <td>Actif</td>
+                            </tr>
+                            <tr>
+                                <td>202</td>
+                                <td>Partenariat Médical</td>
+                                <td>2026-03-15</td>
+                                <td>2026-04-30</td>
+                                <td>5000,00 €</td>
+                                <td>Terminé</td>
+                            </tr>
+                            <tr>
+                                <td>203</td>
+                                <td>Visibilité Or</td>
+                                <td>2026-05-10</td>
+                                <td>2026-11-10</td>
+                                <td>18000,00 €</td>
+                                <td>Planifié</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="section-actions">
+                    <button class="btn btn-export">Exporter sponsoring</button>
+                </div>
+                <div class="section-note">Représentation simple des contrats de sponsoring, avec recherche et filtres par état et montant.</div>
+            </section>
+            <section class="section-card" style="margin-top:24px;">
+                <h2 class="section-title">Fourniture</h2>
+                <div class="toolbar">
+                    <div class="search-box">
+                        <input type="search" placeholder="Rechercher une fourniture ou un type">
+                    </div>
+                    <div class="filter-group">
+                        <label>
+                            Filtrer par type
+                            <select>
+                                <option>Tout</option>
+                                <option>Nourritures</option>
+                                <option>Vêtements</option>
+                                <option>Matériel médical</option>
+                                <option>Caméra</option>
+                                <option>Micro</option>
+                            </select>
+                        </label>
+                        <label>
+                            Filtrer par disponibilité
+                            <select>
+                                <option>Tout</option>
+                                <option>Faible stock</option>
+                                <option>Stock suffisant</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div class="table-shell">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Type</th>
+                                <th>Nom fourniture</th>
+                                <th>Quantité</th>
+                                <th>Prix unitaire</th>
+                                <th>Description</th>
+                                <th>Date fourniture</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>301</td>
+                                <td>Nourritures</td>
+                                <td>Barres énergétiques</td>
+                                <td>1200</td>
+                                <td>1,80 €</td>
+                                <td>Collations pour coureurs</td>
+                                <td>2026-04-10</td>
+                            </tr>
+                            <tr>
+                                <td>302</td>
+                                <td>Vêtements</td>
+                                <td>T-shirts officiels</td>
+                                <td>500</td>
+                                <td>8,50 €</td>
+                                <td>Maillots de l'événement</td>
+                                <td>2026-04-18</td>
+                            </tr>
+                            <tr>
+                                <td>303</td>
+                                <td>Matériel médical</td>
+                                <td>Trousse premiers secours</td>
+                                <td>30</td>
+                                <td>45,00 €</td>
+                                <td>Équipements de secours</td>
+                                <td>2026-04-08</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="section-actions">
+                    <button class="btn btn-export">Exporter fourniture</button>
+                </div>
+                <div class="section-note">Toutes les fournitures sont affichées en mode lecture seule. Le filtre par type aide à trier rapidement.</div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
