@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<!-- saved from url=(0060)http://localhost/MARATHONS/View/FrontOffice/orderHistory.php -->
+<html lang="fr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes commandes</title>
+    <style>
+        body { margin:0; font-family:"Segoe UI",sans-serif; background:linear-gradient(180deg,#fff8e7,#eef8f8); color:#102a43; }
+        .wrap { width:min(1200px, calc(100% - 32px)); margin:24px auto 40px; }
+        .hero { background:linear-gradient(135deg,#102a43,#0f766e); color:#fff; border-radius:28px; padding:28px; box-shadow:0 20px 40px rgba(16,42,67,.16); }
+        .panel { margin-top:18px; background:#fff; border-radius:28px; padding:24px; box-shadow:0 18px 40px rgba(16,42,67,.08); overflow:hidden; }
+        .table-wrap { overflow:auto; }
+        table { width:100%; border-collapse:collapse; min-width:900px; }
+        th, td { padding:16px 14px; text-align:left; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+        th { color:#486581; font-size:.9rem; text-transform:uppercase; letter-spacing:.04em; }
+        .badge { display:inline-flex; align-items:center; padding:6px 12px; border-radius:999px; font-weight:700; }
+        .badge-paid { background:#dcfce7; color:#166534; }
+        .badge-pending { background:#fef3c7; color:#92400e; }
+        .badge-valid { background:#dcfce7; color:#166534; }
+        .badge-waiting { background:#fde68a; color:#92400e; }
+        .actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .btn, .btn-inline {
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            text-decoration:none;
+            border:0;
+            border-radius:14px;
+            padding:11px 14px;
+            font:inherit;
+            font-weight:700;
+            cursor:pointer;
+        }
+        .btn-warning { background:#fff7ed; color:#b45309; border:1px solid #fdba74; }
+        .btn-delete { background:#fef2f2; color:#b91c1c; border:1px solid #fca5a5; }
+        .btn-export { background:#ecfeff; color:#0f766e; border:1px solid #99f6e4; }
+        .empty { padding:30px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:22px; text-align:center; color:#486581; }
+        .meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-top:16px; }
+        .meta-card { background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.18); border-radius:18px; padding:16px; }
+        @media (max-width:900px) {
+            .wrap { width:min(100%, calc(100% - 20px)); }
+            .hero, .panel { padding:18px; border-radius:22px; }
+        }
+    </style>
+</head>
+<body>
+    <style>
+    .fo-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(16px);
+        background: rgba(255, 255, 255, 0.82);
+        border-bottom: 1px solid rgba(16, 42, 67, 0.08);
+        box-shadow: 0 10px 30px rgba(16, 42, 67, 0.06);
+    }
+
+    .fo-topbar-shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        min-height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .fo-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: #102a43;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+    }
+
+    .fo-brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        object-fit: cover;
+        display: block;
+        background: white;
+        box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+        border: 1px solid rgba(16, 42, 67, 0.08);
+    }
+
+    .fo-brand-text {
+        display: grid;
+        line-height: 1.05;
+    }
+
+    .fo-brand-text small {
+        color: #627d98;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .fo-nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .fo-link,
+    .fo-profile,
+    .fo-cta {
+        text-decoration: none;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-weight: 700;
+        transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .fo-link {
+        color: #102a43;
+        background: rgba(255, 255, 255, 0.76);
+        border: 1px solid rgba(16, 42, 67, 0.08);
+    }
+
+    .fo-link:hover,
+    .fo-profile:hover,
+    .fo-cta:hover {
+        transform: translateY(-1px);
+    }
+
+    .fo-link.active {
+        color: white;
+        background: linear-gradient(135deg, #102a43, #0f766e);
+        box-shadow: 0 10px 24px rgba(16, 42, 67, 0.18);
+    }
+
+    .fo-cta {
+        color: white;
+        background: linear-gradient(135deg, #0f766e, #14b8a6);
+        box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+    }
+
+    .fo-profile {
+        color: #102a43;
+        background: linear-gradient(135deg, #fff7ed, #ffffff);
+        border: 1px solid rgba(255, 183, 3, 0.28);
+    }
+
+    .fo-profile-role {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: rgba(15, 118, 110, 0.1);
+        color: #0f766e;
+        font-size: 0.78rem;
+    }
+
+    @media (max-width: 860px) {
+        .fo-topbar-shell {
+            padding: 10px 0;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .fo-nav {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+<div class="fo-topbar">
+    <div class="fo-topbar-shell">
+        <a class="fo-brand" href="http://localhost/MARATHONS/View/FrontOffice/index.php">
+            <img class="fo-brand-mark" src="./Mes commandes_files/LOGO.jpg" alt="BarchaThon">
+            <span class="fo-brand-text">
+                <span>BarchaThon</span>
+                <small>Front Office</small>
+            </span>
+        </a>
+
+        <nav class="fo-nav">
+            <a class="fo-link " href="http://localhost/MARATHONS/View/FrontOffice/index.php">Accueil</a>
+            <a class="fo-link " href="http://localhost/MARATHONS/View/FrontOffice/listMarathons.php">Catalogue</a>
+                            <a class="fo-link active" href="http://localhost/MARATHONS/View/FrontOffice/orderHistory.php">Voir mes commandes</a>
+            
+            
+                            <a class="fo-profile" href="http://localhost/MARATHONS/View/FrontOffice/profile.php">
+                    mokhtar ben khaled                    <span class="fo-profile-role">participant</span>
+                </a>
+                <a class="fo-link" href="http://localhost/MARATHONS/View/FrontOffice/orderHistory.php?action=logout">Se deconnecter</a>
+                    </nav>
+    </div>
+</div>
+    <div class="wrap">
+        <section class="hero">
+            <h1>Historique de mes commandes</h1>
+            <p>mokhtar ben khaled peut suivre ici toutes les commandes de stands liees a ses marathons.</p>
+            <div class="meta">
+                <div class="meta-card">
+                    <strong>1</strong>
+                    <div>commandes enregistrees</div>
+                </div>
+                <div class="meta-card">
+                    <strong>7.50 TND</strong>
+                    <div>montant total des commandes</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+                            <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Marathon</th>
+                                <th>Numero du stand</th>
+                                <th>Date</th>
+                                <th>Montant</th>
+                                <th>Paiement en ligne</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                                                            <tr>
+                                    <td>#1</td>
+                                    <td>
+                                        <strong>jarya</strong>
+                                        <div>stand 1</div>
+                                    </td>
+                                    <td>1</td>
+                                    <td>02/04/2026 12:52</td>
+                                    <td><strong>7.50 TND</strong></td>
+                                    <td>
+                                        <span class="badge badge-paid">
+                                            OUI                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-valid">
+                                            validé                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="actions">
+                                            <a class="btn-inline btn-warning" href="http://localhost/MARATHONS/View/FrontOffice/reportOrderIssue.php?id=1">
+                                                <span aria-hidden="true">⚠</span>
+                                                <span>Signaler un probleme</span>
+                                            </a>
+                                            <a class="btn-inline btn-export" href="http://localhost/MARATHONS/View/FrontOffice/exportOrder.php?id=1">
+                                                <span aria-hidden="true">⇩</span>
+                                                <span>Exporter</span>
+                                            </a>
+                                            <form method="post" style="margin:0;">
+                                                <input type="hidden" name="action" value="delete_order">
+                                                <input type="hidden" name="order_id" value="1">
+                                                <button class="btn-inline btn-delete" type="submit" onclick="return confirm(&#39;Supprimer cette commande de votre historique ?&#39;);">
+                                                    <span aria-hidden="true">🗑</span>
+                                                    <span>Delete</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+                    </section>
+    </div>
+
+
+</body></html>
