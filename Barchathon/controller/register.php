@@ -1,17 +1,23 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creer un compte participant</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../view/assets/css/style.css">
 </head>
 <body>
     <div class="page">
         <div class="card-form fade-in">
             <h1>Creer un compte participant</h1>
             <p>Formulaire d inscription pour creer un nouveau compte participant.</p>
-            <form method="POST" action="../../controller/create_user.php" enctype="multipart/form-data" data-validate>
+            <?php if (!empty($_GET['error'])): ?>
+                <div class="error-msg"><?= htmlspecialchars($_GET['error']) ?></div>
+            <?php endif; ?>
+            <form method="POST" action="create_user.php" enctype="multipart/form-data" data-validate>
                 <div class="form-grid">
                     <div class="field full-width">
                         <label for="name">Nom complet</label>
@@ -75,7 +81,7 @@
                 </div>
                 <div class="actions">
                     <button class="btn btn-primary" type="submit">Confirmer</button>
-                    <a class="btn btn-secondary" href="login.html">Retour</a>
+                    <a class="btn btn-secondary" href="login.php">Retour</a>
                 </div>
             </form>
         </div>
@@ -88,6 +94,6 @@
         </div>
     </div>
 
-    <script src="../assets/js/app.js"></script>
+    <script src="../view/assets/js/app.js"></script>
 </body>
 </html>

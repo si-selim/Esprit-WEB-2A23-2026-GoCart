@@ -4,77 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modifier mon profil</title>
-    <style>
-        :root {
-            --ink:#102a43;
-            --teal:#0f766e;
-            --sun:#ffb703;
-            --bg:#f4fbfb;
-            --card:#ffffff;
-            --muted:#627d98;
-            --line:#d9e2ec;
-        }
-        * { box-sizing:border-box; }
-        body { margin:0; font-family:"Segoe UI",sans-serif; color:var(--ink); background:linear-gradient(180deg,#fefaf0 0%,var(--bg)100%); }
-        .page { width:min(980px,calc(100% - 32px)); margin:0 auto; padding:28px 0 56px; }
-        .card { background:var(--card); border-radius:28px; padding:28px; box-shadow:0 18px 40px rgba(16,42,67,.08); border:1px solid rgba(16,42,67,.08); }
-        h1 { margin:0 0 12px; font-size:2.2rem; }
-        p { color:var(--muted); line-height:1.7; margin:0 0 24px; }
-        .grid { display:grid; gap:18px; grid-template-columns:repeat(2,minmax(0,1fr)); }
-        .field { display:grid; gap:8px; }
-        label { font-weight:700; }
-        input, select { width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--line); background:#f8fafb; color:var(--ink); }
-        .full-width { grid-column:1 / -1; }
-        .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
-        .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; border-radius:14px; font-weight:700; border:0; cursor:pointer; text-decoration:none; }
-        .btn-primary { background:linear-gradient(135deg,var(--teal),#14b8a6); color:#fff; }
-        .btn-secondary { background:#fff; color:var(--ink); border:1px solid rgba(16,42,67,.12); }
-        .btn-back { color:var(--teal); }
-        @media (max-width:760px) { .grid { grid-template-columns:1fr; } }
-    </style>
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
     <div class="page">
-        <div class="card">
+        <div class="card-form fade-in">
             <h1>Modifier mon profil</h1>
             <p>Formulaire de modification pour mettre a jour vos informations personnelles.</p>
-            <form>
-                <div class="grid">
+            <form method="POST" action="../../controller/update_user.php" enctype="multipart/form-data" data-validate>
+                <div class="form-grid">
                     <div class="field full-width">
                         <label for="name">Nom complet</label>
-                        <input id="name" name="name" type="text" placeholder="Nom complet">
+                        <input id="name" name="nom_complet" type="text" placeholder="Nom complet" required minlength="3">
                     </div>
                     <div class="field">
                         <label for="username">Nom d utilisateur</label>
-                        <input id="username" name="username" type="text" placeholder="Nom d utilisateur">
+                        <input id="username" name="nom_user" type="text" placeholder="Nom d utilisateur" required minlength="3" pattern="[a-zA-Z0-9_]+">
                     </div>
                     <div class="field">
                         <label for="email">Email</label>
-                        <input id="email" name="email" type="email" placeholder="participant@email.com">
+                        <input id="email" name="email" type="email" placeholder="participant@email.com" required>
                     </div>
                     <div class="field">
                         <label for="age">Age</label>
-                        <input id="age" name="age" type="number" placeholder="25" min="1">
+                        <input id="age" name="age" type="number" placeholder="25" min="1" max="120">
                     </div>
                     <div class="field">
                         <label for="weight">Poids (kg)</label>
-                        <input id="weight" name="weight" type="number" placeholder="70" min="1" step="0.1">
+                        <input id="weight" name="poids" type="number" placeholder="70" min="1" max="500" step="0.1">
                     </div>
                     <div class="field">
                         <label for="height">Taille (cm)</label>
-                        <input id="height" name="height" type="number" placeholder="175" min="1" step="0.1">
+                        <input id="height" name="taille" type="number" placeholder="175" min="1" max="300">
                     </div>
                     <div class="field">
                         <label for="phone">Telephone</label>
-                        <input id="phone" name="phone" type="tel" placeholder="0612345678">
+                        <input id="phone" name="tel" type="tel" placeholder="12345678" pattern="[0-9]{8}" title="Le numero doit contenir exactement 8 chiffres">
                     </div>
                     <div class="field">
                         <label for="country">Pays</label>
-                        <input id="country" name="country" type="text" placeholder="Tunisie">
+                        <input id="country" name="pays" type="text" placeholder="Tunisie">
                     </div>
                     <div class="field">
                         <label for="city">Ville / adresse exacte</label>
-                        <input id="city" name="city" type="text" placeholder="Tunis">
+                        <input id="city" name="ville" type="text" placeholder="Tunis">
                     </div>
                     <div class="field">
                         <label for="occupation">Occupation</label>
@@ -85,6 +58,16 @@
                             <option value="Retraite">Retraite</option>
                         </select>
                     </div>
+                    <div class="field">
+                        <label>Photo de profil</label>
+                        <div class="file-upload">
+                            <label class="file-upload-label">
+                                Changer la photo
+                                <input type="file" name="profile_picture" accept="image/jpeg,image/png,image/gif,image/webp">
+                            </label>
+                            <span class="file-upload-name">Aucun fichier</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="actions">
                     <button class="btn btn-primary" type="submit">Mettre a jour</button>
@@ -93,5 +76,14 @@
             </form>
         </div>
     </div>
+
+    <div id="feedback-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="feedback-icon" class="feedback-icon success"></div>
+            <p id="feedback-message"></p>
+        </div>
+    </div>
+
+    <script src="../assets/js/app.js"></script>
 </body>
 </html>
