@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!-- saved from url=(0073)http://localhost/MARATHONS/View/FrontOffice/standDetails.php?id=5&stand=1 -->
+<html lang="fr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogue stand</title>
+    <style>
+        body { margin:0; font-family:"Segoe UI",sans-serif; background:linear-gradient(180deg,#fff8e7,#eef8f8); color:#102a43; }
+        .wrap { width:min(1100px, calc(100% - 32px)); margin:24px auto 32px; }
+        .top { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
+        .top a { text-decoration:none; background:#fff; color:#102a43; padding:10px 14px; border-radius:999px; font-weight:700; }
+        .grid { display:grid; grid-template-columns:2fr 1fr; gap:18px; }
+        .products { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; }
+        .card, .side { background:#fff; border-radius:24px; padding:22px; box-shadow:0 16px 40px rgba(16,42,67,.08); }
+        .thumb { width:100%; height:160px; object-fit:cover; border-radius:16px; display:block; margin-bottom:12px; }
+        .btn { display:inline-block; text-decoration:none; background:#0f766e; color:white; padding:10px 14px; border-radius:14px; font-weight:700; border:0; cursor:pointer; }
+        .qty { width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; margin:10px 0; font:inherit; }
+        .secondary { background:#e2e8f0; color:#102a43; }
+        .message { margin-bottom:12px; padding:12px 14px; border-radius:14px; background:#ecfeff; color:#0f766e; font-weight:700; }
+        @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+    <style>
+    .fo-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(16px);
+        background: rgba(255, 255, 255, 0.82);
+        border-bottom: 1px solid rgba(16, 42, 67, 0.08);
+        box-shadow: 0 10px 30px rgba(16, 42, 67, 0.06);
+    }
+
+    .fo-topbar-shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        min-height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .fo-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: #102a43;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+    }
+
+    .fo-brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        object-fit: cover;
+        display: block;
+        background: white;
+        box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+        border: 1px solid rgba(16, 42, 67, 0.08);
+    }
+
+    .fo-brand-text {
+        display: grid;
+        line-height: 1.05;
+    }
+
+    .fo-brand-text small {
+        color: #627d98;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .fo-nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .fo-link,
+    .fo-profile,
+    .fo-cta {
+        text-decoration: none;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font-weight: 700;
+        transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .fo-link {
+        color: #102a43;
+        background: rgba(255, 255, 255, 0.76);
+        border: 1px solid rgba(16, 42, 67, 0.08);
+    }
+
+    .fo-link:hover,
+    .fo-profile:hover,
+    .fo-cta:hover {
+        transform: translateY(-1px);
+    }
+
+    .fo-link.active {
+        color: white;
+        background: linear-gradient(135deg, #102a43, #0f766e);
+        box-shadow: 0 10px 24px rgba(16, 42, 67, 0.18);
+    }
+
+    .fo-cta {
+        color: white;
+        background: linear-gradient(135deg, #0f766e, #14b8a6);
+        box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+    }
+
+    .fo-profile {
+        color: #102a43;
+        background: linear-gradient(135deg, #fff7ed, #ffffff);
+        border: 1px solid rgba(255, 183, 3, 0.28);
+    }
+
+    .fo-profile-role {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: rgba(15, 118, 110, 0.1);
+        color: #0f766e;
+        font-size: 0.78rem;
+    }
+
+    @media (max-width: 860px) {
+        .fo-topbar-shell {
+            padding: 10px 0;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .fo-nav {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+<div class="fo-topbar">
+    <div class="fo-topbar-shell">
+        <a class="fo-brand" href="http://localhost/MARATHONS/View/FrontOffice/index.php">
+            <img class="fo-brand-mark" src="./Catalogue stand_files/LOGO.jpg" alt="BarchaThon">
+            <span class="fo-brand-text">
+                <span>BarchaThon</span>
+                <small>Front Office</small>
+            </span>
+        </a>
+
+        <nav class="fo-nav">
+            <a class="fo-link " href="http://localhost/MARATHONS/View/FrontOffice/index.php">Accueil</a>
+            <a class="fo-link active" href="http://localhost/MARATHONS/View/FrontOffice/listMarathons.php">Catalogue</a>
+                            <a class="fo-link " href="http://localhost/MARATHONS/View/FrontOffice/notifications.php">Notifications (1)</a>
+                <a class="fo-link " href="Mes commandes.php">Voir mes commandes</a>
+            
+            
+                            <a class="fo-profile" href="http://localhost/MARATHONS/View/FrontOffice/profile.php">
+                    Participant Demo                    <span class="fo-profile-role">participant</span>
+                </a>
+                <a class="fo-link" href="http://localhost/MARATHONS/View/FrontOffice/detailMarathon.php?action=logout">Se deconnecter</a>
+                    </nav>
+    </div>
+</div>
+    <div class="wrap">
+        <div class="top">
+            <h1>stand 1 - jarya</h1>
+            <div>
+                <a href="http://localhost/MARATHONS/View/FrontOffice/standsMarathon.php?id=5">Retour stands</a>
+                <a href="http://localhost/MARATHONS/View/FrontOffice/detailMarathon.php?id=5">Retour details</a>
+            </div>
+        </div>
+        <div class="message">Panier mis a jour.</div>                    <div class="grid">
+                <form method="post" class="products">
+                    <input type="hidden" name="action" value="save_cart">
+                    <input type="hidden" name="order_id" value="0">
+                                            <div class="card">
+                            <img class="thumb" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20220%22%3E%3Crect%20width%3D%22320%22%20height%3D%22220%22%20rx%3D%2228%22%20fill%3D%22%238ecae6%22%2F%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%2268%22%20r%3D%2236%22%20fill%3D%22rgba%28255%2C255%2C255%2C0.25%29%22%2F%3E%3Ccircle%20cx%3D%22260%22%20cy%3D%22150%22%20r%3D%2254%22%20fill%3D%22rgba%28255%2C255%2C255%2C0.18%29%22%2F%3E%3Crect%20x%3D%2236%22%20y%3D%22144%22%20width%3D%22248%22%20height%3D%2240%22%20rx%3D%2220%22%20fill%3D%22rgba%28255%2C255%2C255%2C0.22%29%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2295%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2226%22%20font-weight%3D%22700%22%20fill%3D%22%23023047%22%3EEAU%3C%2Ftext%3E%3Ctext%20x%3D%22160%22%20y%3D%22170%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2218%22%20font-weight%3D%22700%22%20fill%3D%22%23023047%22%3ETunisia%20Marathon%20Hub%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Eau minerale">
+                            <h3>Eau minerale</h3>
+                            <p>Bouteille d eau fraiche pour les coureurs.</p>
+                            <p><strong>3.00 TND</strong></p>
+                                                            <label for="qty_1">Quantite</label>
+                                <input class="qty" id="qty_1" type="number" min="0" step="1" name="quantities[1]" value="2">
+                                                    </div>
+                                            <div class="card">
+                            <img class="thumb" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20220%22%3E%3Crect%20width%3D%22320%22%20height%3D%22220%22%20rx%3D%2228%22%20fill%3D%22%23ffd166%22%2F%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%2268%22%20r%3D%2236%22%20fill%3D%22rgba%28255%2C255%2C255%2C0.25%29%22%2F%3E%3Ccircle%20cx%3D%22260%22%20cy%3D%22150%22%20r%3D%2254%22%20fill%3D%22rgba%28255%2C255%2C255%2C0.18%29%22%2F%3E%3Crect%20x%3D%2236%22%20y%3D%22144%22%20width%3D%22248%22%20height%3D%2240%22%20rx%3D%2220%22%20fill%3D%22rgba%28255%2C255%2C255%2C0.22%29%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2295%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2226%22%20font-weight%3D%22700%22%20fill%3D%22%237f5539%22%3EBANANE%3C%2Ftext%3E%3Ctext%20x%3D%22160%22%20y%3D%22170%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2218%22%20font-weight%3D%22700%22%20fill%3D%22%237f5539%22%3ETunisia%20Marathon%20Hub%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Banane fraiche">
+                            <h3>Banane fraiche</h3>
+                            <p>Fruit pratique pour recuperation rapide.</p>
+                            <p><strong>4.50 TND</strong></p>
+                                                            <label for="qty_2">Quantite</label>
+                                <input class="qty" id="qty_2" type="number" min="0" step="1" name="quantities[2]" value="1">
+                                                    </div>
+                                            <div class="card">
+                            <img class="thumb" src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20320%20220%22%3E%3Crect%20width%3D%22320%22%20height%3D%22220%22%20rx%3D%2228%22%20fill%3D%22%23fb8500%22%2F%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%2268%22%20r%3D%2236%22%20fill%3D%22rgba%28255%2C255%2C255%2C0.25%29%22%2F%3E%3Ccircle%20cx%3D%22260%22%20cy%3D%22150%22%20r%3D%2254%22%20fill%3D%22rgba%28255%2C255%2C255%2C0.18%29%22%2F%3E%3Crect%20x%3D%2236%22%20y%3D%22144%22%20width%3D%22248%22%20height%3D%2240%22%20rx%3D%2220%22%20fill%3D%22rgba%28255%2C255%2C255%2C0.22%29%22%2F%3E%3Ctext%20x%3D%22160%22%20y%3D%2295%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2226%22%20font-weight%3D%22700%22%20fill%3D%22%23ffffff%22%3EORANGE%3C%2Ftext%3E%3Ctext%20x%3D%22160%22%20y%3D%22170%22%20text-anchor%3D%22middle%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2218%22%20font-weight%3D%22700%22%20fill%3D%22%23ffffff%22%3ETunisia%20Marathon%20Hub%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Orange fraiche">
+                            <h3>Orange fraiche</h3>
+                            <p>Orange douce riche en energie.</p>
+                            <p><strong>4.50 TND</strong></p>
+                                                            <label for="qty_3">Quantite</label>
+                                <input class="qty" id="qty_3" type="number" min="0" step="1" name="quantities[3]" value="0">
+                                                    </div>
+                                                                <div style="grid-column:1 / -1; display:flex; gap:12px; flex-wrap:wrap;">
+                            <button class="btn" type="submit">Mettre a jour le panier</button>
+                        </div>
+                                    </form>
+                <aside class="side">
+                    <h3>Panier participant</h3>
+                                                                        <p>Eau minerale x2 - 6.00 TND</p>
+                                                    <p>Banane fraiche x1 - 4.50 TND</p>
+                                                <p><strong>Total: 10.50 TND</strong></p>
+                        <form method="post">
+                            <input type="hidden" name="action" value="validate_cart">
+                            <input type="hidden" name="order_id" value="0">
+                            <button class="btn" type="submit">Valider le panier</button>
+                        </form>
+                                    </aside>
+            </div>
+            </div>
+
+
+</body></html>
