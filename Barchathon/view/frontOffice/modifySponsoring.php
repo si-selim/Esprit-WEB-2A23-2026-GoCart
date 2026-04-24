@@ -33,11 +33,69 @@
         .btn-secondary { background:#fff; color:var(--ink); border:1px solid rgba(16,42,67,.12); }
         .error { color:#d92d20; font-size:0.9rem; display:block; margin-top:4px; }
         @media (max-width:760px) { .grid { grid-template-columns:1fr; } }
+    
+
+
+
+        .fo-topbar {
+        position:sticky; top:0; z-index:1000;
+        backdrop-filter:blur(16px);
+        background:rgba(255,255,255,0.95);
+        border-bottom:1px solid rgba(16,42,67,0.08);
+        box-shadow:0 4px 18px rgba(16,42,67,0.06);
+    }
+    .fo-topbar-shell {
+        width:min(1200px,calc(100% - 32px));
+        margin:0 auto; min-height:72px;
+        display:flex; align-items:center;
+        justify-content:space-between; gap:16px;
+    }
+    .fo-brand { display:inline-flex; align-items:center; gap:12px; text-decoration:none; color:#102a43; font-weight:900; font-size:1.1rem; flex-shrink:0; }
+    .fo-brand img { height:50px; border-radius:10px; object-fit:cover; }
+    .fo-nav { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+    .fo-link, .fo-cta, .fo-user {
+        text-decoration:none; border-radius:999px; padding:9px 16px;
+        font-weight:700; font-size:0.88rem;
+        transition:transform .15s,background .15s,box-shadow .15s;
+        white-space:nowrap;
+    }
+    .fo-link { color:#102a43; border:1px solid rgba(16,42,67,0.12); background:transparent; }
+    .fo-link:hover { background:rgba(16,42,67,0.05); transform:translateY(-1px); }
+    .fo-link.active { color:white; background:#102a43; border-color:#102a43; }
+    .fo-cta { color:white; background:linear-gradient(135deg,#0f766e,#14b8a6); border:none; box-shadow:0 5px 16px rgba(15,118,110,.22); }
+    .fo-cta:hover { transform:translateY(-1px); }
+    .fo-user { background:linear-gradient(135deg,#fff7ed,#fff); border:1px solid rgba(255,183,3,.3); color:#102a43; display:flex; align-items:center; gap:7px; pointer-events:none; }
+    .fo-role-badge { background:rgba(15,118,110,.12); color:#0f766e; border-radius:999px; padding:2px 8px; font-size:0.75rem; font-weight:700; }
+    @media(max-width:768px){ .fo-topbar-shell{flex-wrap:wrap;padding:10px 0;min-height:auto;} .fo-nav{width:100%;} }
+
+    
+    
     </style>
 </head>
 <body>
+
+
+    <div class="fo-topbar">
+    <div class="fo-topbar-shell">
+        <a class="fo-brand" href="accueil.php">
+            <img src="../assets/images/logo_barchathon.jpg" alt="BarchaThon">
+            BarchaThon
+        </a>
+        <nav class="fo-nav">
+            <a class="fo-link active" href="accueil.php">Accueil</a>
+            <a class="fo-link " href="listMarathons.php">Catalogue</a>
+            <a class="fo-link" href="mesSponsors.php">Sponsors</a>
+            <a class="fo-link" href="register.php">S'inscrire</a>
+            <a class="fo-cta" href="login.php">Se connecter</a>
+        </nav>
+    </div>
+    </div>
+
+
     <?php
     include '../../config.php';
+    include '../../controller/sponsoringController.php';
+    include '../../controller/sponsorController.php';
 
     $selectedSponsor = null;
     $selectedMarathon = null;
@@ -50,13 +108,18 @@
     $idMarathon = null;
     $idSponsoring = null;
 
-    $db = config::getConnexion();
+    $formName = isset($_GET['formName']) ? $_GET['formName'] : '';
+    $formDateDebut = isset($_GET['formDateDebut']) ? $_GET['formDateDebut'] : '';
+    $formDateFin = isset($_GET['formDateFin']) ? $_GET['formDateFin'] : '';
+    $formMontant = isset($_GET['formMontant']) ? $_GET['formMontant'] : '';
+    $formEtat = isset($_GET['formEtat']) ? $_GET['formEtat'] : '';
+
+    $sponsoringCtrl = new sponsoringController();
+    $sponsorCtrl = new sponsorController();
 
     if (isset($_GET['id'])) {
         $idSponsoring = $_GET['id'];
-        $stmt = $db->prepare("SELECT * FROM sponsoring WHERE idSponsoring = ?");
-        $stmt->execute([$idSponsoring]);
-        $sponsoring = $stmt->fetch(PDO::FETCH_ASSOC);
+        $sponsoring = $sponsoringCtrl->showSponsoring($idSponsoring);
 
         if ($sponsoring) {
             $nomSponsoring = $sponsoring['nomSponsoring'];
@@ -77,15 +140,11 @@
     }
 
     if ($idSponsor) {
-        $stmt = $db->prepare("SELECT nom FROM sponsor WHERE idSponsor = ?");
-        $stmt->execute([$idSponsor]);
-        $selectedSponsor = $stmt->fetch(PDO::FETCH_ASSOC);
+        $selectedSponsor = $sponsorCtrl->showSponsor($idSponsor);
     }
 
     if ($idMarathon) {
-        $stmt = $db->prepare("SELECT nom_marathon FROM marathon WHERE id_marathon = ?");
-        $stmt->execute([$idMarathon]);
-        $selectedMarathon = $stmt->fetch(PDO::FETCH_ASSOC);
+        $selectedMarathon = $sponsoringCtrl->showMarathon($idMarathon);
     }
     ?>
     <div class="page">
@@ -105,17 +164,17 @@
                 <div class="grid">
                     <div class="field full-width">
                         <label for="name">Nom Sponsoring</label>
-                        <input id="name" name="name" type="text" placeholder="Nom du sponsoring" value="<?php echo htmlspecialchars($nomSponsoring); ?>">
+                        <input id="name" name="name" type="text" placeholder="Nom du sponsoring" value="<?php echo htmlspecialchars($formName ?: $nomSponsoring); ?>">
                         <span id="name-error" class="error"></span>
                     </div>
                     <div class="field full-width">
                         <label>Sponsor</label>
                         <?php if ($selectedSponsor): ?>
                             <input type="text" value="<?php echo htmlspecialchars($selectedSponsor['nom']); ?>" readonly>
-                            <a class="btn btn-secondary" href="chooseSponsorSponsoring.php<?php echo isset($idMarathon) ? '?idMarathon=' . $idMarathon : ''; ?>">Changer</a>
+                            <a class="btn btn-secondary" href="#" data-preserve-form data-target="chooseSponsorSponsoring.php">Changer</a>
                         <?php else: ?>
                             <div class="button-group">
-                                <a href="chooseSponsorSponsoring.php<?php echo isset($idMarathon) ? '?idMarathon=' . $idMarathon : ''; ?>">Choisir un sponsor</a>
+                                <a href="#" data-preserve-form data-target="chooseSponsorSponsoring.php">Choisir un sponsor</a>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -123,33 +182,33 @@
                         <label>Marathon sponsorisé</label>
                         <?php if ($selectedMarathon): ?>
                             <input type="text" value="<?php echo htmlspecialchars($selectedMarathon['nom_marathon']); ?>" readonly>
-                            <a class="btn btn-secondary" href="chooseMarathon.php<?php echo isset($idSponsor) ? '?idSponsor=' . $idSponsor : ''; ?>">Changer</a>
+                            <a class="btn btn-secondary" href="#" data-preserve-form data-target="chooseMarathon.php">Changer</a>
                         <?php else: ?>
                             <div class="button-group">
-                                <a href="chooseMarathon.php<?php echo isset($idSponsor) ? '?idSponsor=' . $idSponsor : ''; ?>">Choisir un marathon</a>
+                                <a href="#" data-preserve-form data-target="chooseMarathon.php">Choisir un marathon</a>
                             </div>
                         <?php endif; ?>
                     </div>
                     <div class="field">
                         <label for="dateDebut">Date Début</label>
-                        <input id="dateDebut" name="dateDebut" type="date" value="<?php echo htmlspecialchars($dateDebut); ?>">
+                        <input id="dateDebut" name="dateDebut" type="date" value="<?php echo htmlspecialchars($formDateDebut ?: $dateDebut); ?>">
                         <span id="date-error" class="error"></span>
                     </div>
                     <div class="field">
                         <label for="dateFin">Date Fin</label>
-                        <input id="dateFin" name="dateFin" type="date" value="<?php echo htmlspecialchars($dateFin); ?>">
+                        <input id="dateFin" name="dateFin" type="date" value="<?php echo htmlspecialchars($formDateFin ?: $dateFin); ?>">
                     </div>
                     <div class="field">
                         <label for="montant">Montant</label>
-                        <input id="montant" name="montant" type="number" step="0.01" placeholder="12000.00" value="<?php echo htmlspecialchars($montant); ?>">
+                        <input id="montant" name="montant" type="number" step="0.01" placeholder="12000.00" value="<?php echo htmlspecialchars($formMontant ?: $montant); ?>">
                         <span id="montant-error" class="error"></span>
                     </div>
                     <div class="field">
                         <label for="etat">État</label>
                         <select id="etat" name="etat">
-                            <option<?php echo $etat === 'Actif' ? ' selected' : ''; ?>>Actif</option>
-                            <option<?php echo $etat === 'Terminé' ? ' selected' : ''; ?>>Terminé</option>
-                            <option<?php echo $etat === 'Annulé' ? ' selected' : ''; ?>>Annulé</option>
+                            <option<?php echo ($formEtat ?: $etat) === 'Actif' ? ' selected' : ''; ?>>Actif</option>
+                            <option<?php echo ($formEtat ?: $etat) === 'Terminé' ? ' selected' : ''; ?>>Terminé</option>
+                            <option<?php echo ($formEtat ?: $etat) === 'Annulé' ? ' selected' : ''; ?>>Annulé</option>
                         </select>
                     </div>
                 </div>
@@ -161,6 +220,43 @@
         </div>
     </div>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const preserveLinks = document.querySelectorAll('a[data-preserve-form]');
+            
+            preserveLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = this.getAttribute('data-target');
+                    const name = document.getElementById('name').value;
+                    const dateDebut = document.getElementById('dateDebut').value;
+                    const dateFin = document.getElementById('dateFin').value;
+                    const montant = document.getElementById('montant').value;
+                    const etat = document.getElementById('etat').value;
+                    
+                    const params = new URLSearchParams();
+                    if (name) params.append('formName', name);
+                    if (dateDebut) params.append('formDateDebut', dateDebut);
+                    if (dateFin) params.append('formDateFin', dateFin);
+                    if (montant) params.append('formMontant', montant);
+                    if (etat) params.append('formEtat', etat);
+                    
+                    const idMarathon = '<?php echo $idMarathon; ?>';
+                    const idSponsor = '<?php echo $idSponsor; ?>';
+                    
+                    let url = target;
+                    if (idMarathon && target === 'chooseSponsorSponsoring.php') {
+                        url += '?idMarathon=' + idMarathon + '&' + params.toString();
+                    } else if (idSponsor && target === 'chooseMarathon.php') {
+                        url += '?idSponsor=' + idSponsor + '&' + params.toString();
+                    } else if (params.toString()) {
+                        url += '?' + params.toString();
+                    }
+                    
+                    window.location.href = url;
+                });
+            });
+        });
+
         document.getElementById('sponsoringForm').addEventListener('submit', function(event) {
             var nameField = document.getElementById('name');
             var dateDebutField = document.getElementById('dateDebut');

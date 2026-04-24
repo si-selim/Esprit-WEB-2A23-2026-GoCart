@@ -76,7 +76,7 @@ class sponsorController {
             die('Error: ' . $e->getMessage());
         }
     }
-    public function afficherSponsor($showActions = true, $deleteOnly = false, $viewOnly = false, $chooseButton = false, $extraParams = '') {
+    public function afficherSponsor($showActions = true, $deleteOnly = false, $viewOnly = false, $chooseButton = false, $extraParams = '', $formParams = '') {
         $sql = "SELECT * FROM sponsor";
         $db = config::getConnexion();
         try {
@@ -89,7 +89,7 @@ class sponsorController {
                     echo "<td>{$row['type']}</td>";
                     echo "<td>{$row['email']}</td>";
                     echo "<td>{$row['contact']}</td>";
-                    echo "<td><a href='addSponsoring.php?idSponsor={$row['idSponsor']}{$extraParams}' class='btn btn-primary'>Choisir</a></td>";
+                    echo "<td><a href='addSponsoring.php?idSponsor={$row['idSponsor']}{$extraParams}{$formParams}' class='btn btn-primary'>Choisir</a></td>";
                 } else {
                     if ($deleteOnly) {
                         echo "<td>{$row['idUser']}</td>";

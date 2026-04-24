@@ -77,6 +77,20 @@ class sponsoringController {
         }
     }
 
+    public function showMarathon($id) {
+        $sql = "SELECT * FROM marathon WHERE id_marathon = ?";
+        $db = config::getConnexion();
+        $query = $db->prepare($sql);
+
+        try {
+            $query->execute([$id]);
+            $marathon = $query->fetch(PDO::FETCH_ASSOC);
+            return $marathon;
+        } catch (Exception $e) {
+            die('Error: ' . $e->getMessage());
+        }
+    }
+
     public function afficherSponsoring($showActions = true, $deleteOnly = false, $viewOnly = false) {
         $sql = "SELECT * FROM sponsoring";
         $db = config::getConnexion();
@@ -149,7 +163,7 @@ class sponsoringController {
         }
     }
 
-    public function afficherMarathon($chooseButton = false, $extraParams = '') {
+    public function afficherMarathon($chooseButton = false, $extraParams = '', $formParams = '') {
         $sql = "SELECT * FROM marathon";
         $db = config::getConnexion();
         try {
@@ -161,11 +175,11 @@ class sponsoringController {
                 echo "<td>{$row['region_marathon']}</td>";
                 echo "<td>{$row['date_marathon']}</td>";
                 if ($chooseButton) {
-                    echo "<td><a href='addSponsoring.php?idMarathon={$row['id_marathon']}{$extraParams}' class='btn btn-primary'>Choisir</a></td>";
+                    echo "<td><a href='addSponsoring.php?idMarathon={$row['id_marathon']}{$extraParams}{$formParams}' class='btn btn-primary'>Choisir</a></td>";}
                 }
                 echo "</tr>";
             }
-        } catch (Exception $e) {
+         catch (Exception $e) {
             die('Error:' . $e->getMessage());
         }
     }
