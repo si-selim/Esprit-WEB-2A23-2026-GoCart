@@ -1,0 +1,22 @@
+# ── Local credentials (NEVER commit) ─────────────────────────────────────────
+config_mail.local.php
+config_google.local.php
+
+# ── Uploaded user files ───────────────────────────────────────────────────────
+View/FrontOffice/images/uploads/
+
+# ── OS / editor junk ──────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-workspace
+
+# ── PHP logs / cache ──────────────────────────────────────────────────────────
+*.log
+error_log
+.php_cs.cache
