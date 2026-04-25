@@ -240,7 +240,7 @@ $formattedDate = date('d/m/Y', strtotime($marathon['date_marathon']));
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 <div class="page" style="width:min(1140px,calc(100% - 32px)); margin:0 auto; padding:28px 0 0;">
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px;">
-        <a class="back-link" href="listMarathons.php" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0f766e; font-weight:700; padding:9px 16px; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(16,42,67,.07); font-size:0.92rem;">← Retour aux marathons</a>
+        <a class="back-link" href="<?php echo $parcours_id ? 'detailParcours.php?id=' . $parcours_id : 'listMarathons.php'; ?>" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0f766e; font-weight:700; padding:9px 16px; background:white; border-radius:12px; box-shadow:0 4px 12px rgba(16,42,67,.07); font-size:0.92rem;">← Retour au parcours</a>
         <button class="print-button" onclick="window.print();" style="margin: 0;">Imprimer la confirmation</button>
     </div>
 </div>
