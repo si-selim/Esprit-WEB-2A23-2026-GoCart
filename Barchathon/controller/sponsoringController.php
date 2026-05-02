@@ -91,6 +91,26 @@ class sponsoringController {
         }
     }
 
+    public function getSponsoringDistributionByAmountRange(): array {
+        $sql = "SELECT
+                    SUM(CASE WHEN montant < 500 THEN 1 ELSE 0 END) AS range_0_500,
+                    SUM(CASE WHEN montant >= 500 AND montant < 1000 THEN 1 ELSE 0 END) AS range_500_1000,
+                    SUM(CASE WHEN montant >= 1000 THEN 1 ELSE 0 END) AS range_1000_plus
+                FROM sponsoring";
+        $db = config::getConnexion();
+        try {
+            $query = $db->query($sql);
+            $row = $query->fetch();
+            return [
+                ['label' => '0 - 500', 'count' => (int) $row['range_0_500']],
+                ['label' => '500 - 1000', 'count' => (int) $row['range_500_1000']],
+                ['label' => '1000+', 'count' => (int) $row['range_1000_plus']]
+            ];
+        } catch (Exception $e) {
+            die('Error: ' . $e->getMessage());
+        }
+    }
+
     public function afficherSponsoring($showActions = true, $deleteOnly = false, $viewOnly = false) {
         $sql = "SELECT * FROM sponsoring";
         $db = config::getConnexion();

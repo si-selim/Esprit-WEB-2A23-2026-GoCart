@@ -179,6 +179,7 @@
                 </div>
                 <div class="section-actions">
                     <button class="btn btn-export" onclick="exportSponsorsExcel()">Exporter sponsors</button>
+                    <a class="btn btn-export" href="sponsorStat.php">Stats Sponsors</a>
                 </div>
                 <div class="section-note">Affichage statique de la table des sponsors. Les actions de modification sont désactivées.</div>
             </section>
@@ -254,6 +255,7 @@
                 </div>
                 <div class="section-actions">
                     <button class="btn btn-export" onclick="exportSponsoringExcel()">Exporter sponsoring</button>
+                    <a class="btn btn-export" href="sponsoringStat.php">Stats Sponsoring</a>
                 </div>
                 <div class="section-note">Représentation simple des contrats de sponsoring, avec recherche et filtres par état et montant.</div>
             </section>

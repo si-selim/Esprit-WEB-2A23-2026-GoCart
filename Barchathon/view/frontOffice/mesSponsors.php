@@ -40,6 +40,7 @@
         .toolbar { display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; margin-bottom:22px; align-items:center; }
         .toolbar-left { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
         .toolbar-right { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .section-actions { margin-top:16px; display:flex; flex-wrap:wrap; gap:12px; justify-content:flex-end; }
         .btn { display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:14px; text-decoration:none; font-weight:700; border:0; cursor:pointer; }
         .btn-primary { background:linear-gradient(135deg,var(--teal),#14b8a6); color:#fff; }
         .btn-secondary { background:#fff; color:var(--ink); border:1px solid rgba(16,42,67,.12); }
@@ -201,8 +202,10 @@
                     </tbody>
                 </table>
             </div>
-           <button class="btn btn-export" onclick="exportSponsorsExcel()">Exporter sponsors</button>
-                
+            <div class="section-actions">
+                <button class="btn btn-export" onclick="exportSponsorsExcel()">Exporter sponsors</button>
+                <a class="btn btn-export" href="sponsorStat.php">Stats Sponsors</a>
+            </div>
             <p class="note">Les boutons en début de ligne sont des actions visuelles : supprimer ou modifier l'enregistrement.</p>
         </section>
 
@@ -275,8 +278,10 @@
                     </tbody>
                 </table>
             </div>
-           <button class="btn btn-export" onclick="exportSponsoringExcel()">Exporter sponsoring</button>
-                
+            <div class="section-actions">
+                <button class="btn btn-export" onclick="exportSponsoringExcel()">Exporter sponsoring</button>
+                <a class="btn btn-export" href="sponsoringStat.php">Stats Sponsoring</a>
+            </div>
             <p class="note">Aucune modification réelle n'est appliquée : c'est une interface de gestion pour organisateur.</p>
         </section>
 
