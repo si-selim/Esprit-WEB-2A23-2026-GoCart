@@ -93,6 +93,106 @@
         .modal-actions .btn-secondary { background:#f0f4f8; color:var(--ink); }
         .modal-actions .btn-danger { background:var(--coral); color:#fff; }
 
+
+        /* 🔥 CONTENEUR GLOBAL */
+.chat-box {
+    width: 650px;
+    height: 500px;
+    max-width: 90%;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    background: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* 📜 ZONE DES MESSAGES */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f7f7f8;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 💬 BULLES */
+.message {
+    margin: 10px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    max-width: 75%;
+    font-size: 1.2em;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* 👤 UTILISATEUR */
+.user {
+    background: #007bff;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+/* 🤖 IA */
+.bot {
+    background: #e5e5ea;
+    color: black;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+/* ⌨️ ZONE INPUT */
+.chat-input-area {
+    display: flex;
+    border-top: 1px solid #ccc;
+    background: #fff;
+}
+
+/* 📝 INPUT */
+.chat-input-area input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    outline: none;
+    font-size: 1.1em;
+    border-bottom-left-radius: 12px;
+}
+
+/* 🔘 BOUTON */
+.chat-input-area button {
+    padding: 12px 18px;
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    border-bottom-right-radius: 12px;
+    transition: background 0.2s;
+}
+
+.chat-input-area button:hover {
+    background: #0056b3;
+}
+
+/* 📱 RESPONSIVE (mobile) */
+@media (max-width: 600px) {
+    .chat-box {
+        width: 95%;
+        height: 450px;
+    }
+
+    .message {
+        font-size: 1.1em;
+    }
+}
+
+
+
     </style>
 </head>
 <body>
@@ -114,7 +214,7 @@
                 <a class="side-link" href="#">Paramètres</a>
             </nav>
             <div class="side-note">
-                Consultation des données des sponsors, sponsoring et fourniture. Pas de modification sur cette page.
+                Consultation des données des sponsors et des sponsoring . Pas de modification sur cette page.
             </div>
         </aside>
         <main class="content">
@@ -125,7 +225,7 @@
             <div class="head">
                 <div>
                     <h1>Section sponsors</h1>
-                    <div class="muted">Vue administrative simple pour consulter les tables des sponsors, des sponsoring et des fournitures. Recherche, filtres et export statique sont disponibles.</div>
+                    <div class="muted">Vue administrative simple pour consulter les tables des sponsors et des sponsoring. Recherche, filtres et export statique sont disponibles.</div>
                 </div>
                 <div class="actions">
                     <span class="tag">Lecture seule</span>
@@ -259,99 +359,22 @@
                 </div>
                 <div class="section-note">Représentation simple des contrats de sponsoring, avec recherche et filtres par état et montant.</div>
             </section>
-            <section class="section-card" style="margin-top:24px;">
-                <h2 class="section-title">Fourniture</h2>
-                <div class="toolbar">
-                    <div class="search-box">
-                        <label>
-                            Rechercher une fourniture
-                        <input type="search" placeholder="Rechercher une fourniture ou un type">
-                        </label>
-                    </div>
-                    <div class="filter-group">
-                        <label>
-                            Filtrer par type
-                            <select>
-                                <option>Tout</option>
-                                <option>Nourritures</option>
-                                <option>Vêtements</option>
-                                <option>Matériel médical</option>
-                                <option>Caméra</option>
-                                <option>Micro</option>
-                            </select>
-                        </label>
-                        <label>
-                            Filtrer par disponibilité
-                            <select>
-                                <option>Tout</option>
-                                <option>Faible stock</option>
-                                <option>Stock suffisant</option>
-                            </select>
-                        </label>
-                    </div>
-                </div>
-                <div class="table-shell">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Actions</th>
-                                <th>#</th>
-                                <th>Type</th>
-                                <th>Nom fourniture</th>
-                                <th>Quantité</th>
-                                <th>Prix unitaire</th>
-                                <th>Description</th>
-                                <th>Date fourniture</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <a href="#sponsoring" class="btn btn-secondary">Voir sponsoring</a>
-                                    <a href="#fournitures" class="btn btn-secondary">Voir fourniture</a>
-                                </td>
-                                <td>301</td>
-                                <td>Nourritures</td>
-                                <td>Barres énergétiques</td>
-                                <td>1200</td>
-                                <td>1,80 €</td>
-                                <td>Collations pour coureurs</td>
-                                <td>2026-04-10</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <a href="#sponsoring" class="btn btn-secondary">Voir sponsoring</a>
-                                    <a href="#fournitures" class="btn btn-secondary">Voir fourniture</a>
-                                </td>
-                                <td>302</td>
-                                <td>Vêtements</td>
-                                <td>T-shirts officiels</td>
-                                <td>500</td>
-                                <td>8,50 €</td>
-                                <td>Maillots de l'événement</td>
-                                <td>2026-04-18</td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <a href="#sponsoring" class="btn btn-secondary">Voir sponsoring</a>
-                                    <a href="#fournitures" class="btn btn-secondary">Voir fourniture</a>
-                                </td>
-                                <td>303</td>
-                                <td>Matériel médical</td>
-                                <td>Trousse premiers secours</td>
-                                <td>30</td>
-                                <td>45,00 €</td>
-                                <td>Équipements de secours</td>
-                                <td>2026-04-08</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="section-actions">
-                    <button class="btn btn-export">Exporter fourniture</button>
-                </div>
-                <div class="section-note">Toutes les fournitures sont affichées en mode lecture seule. Le filtre par type aide à trier rapidement.</div>
-            </section>
+            
+
+
+
+            <div class="chat-box">
+
+                <div id="chatMessages" class="chat-messages"></div>
+
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Pose ta question...">
+                    <button onclick="sendChat()">Envoyer</button>
+            </div>
+
+
+
+
         </main>
     </div>
 
@@ -617,6 +640,54 @@ function applyAutoWidth(ws) {
     ws["!cols"] = colWidths;
 }
 
+
+
+
+
+
+
+    function addMessage(text, type) {
+        let container = document.getElementById("chatMessages");
+
+        let msg = document.createElement("div");
+        msg.classList.add("message", type);
+        msg.innerText = text;
+
+        container.appendChild(msg);
+        container.scrollTop = container.scrollHeight;
+
+        return msg;
+    }
+
+    function sendChat() {
+
+        let input = document.getElementById("chatInput");
+        let msg = input.value;
+
+        if (!msg.trim()) return;
+
+        // 🔹 Message utilisateur
+        addMessage(msg, "user");
+
+        input.value = "";
+
+        // 🔹 Message temporaire "Réflexion..."
+        let thinkingMsg = addMessage("🤔 Réflexion...", "bot");
+
+        fetch("chatSponsor_process.php", {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: "message=" + encodeURIComponent(msg)
+        })
+        .then(res => res.text())
+        .then(data => {
+            // 🔥 remplacer "Réflexion..." par vraie réponse
+            thinkingMsg.innerText = data;
+        })
+        .catch(error => {
+            thinkingMsg.innerText = "Erreur : " + error.message;
+        });
+    }
     </script>
 </body>
 </html>

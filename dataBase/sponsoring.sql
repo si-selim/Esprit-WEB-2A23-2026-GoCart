@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : sam. 02 mai 2026 à 18:28
+-- Généré le : mer. 06 mai 2026 à 15:13
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -39,22 +39,6 @@ CREATE TABLE `sponsoring` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Déchargement des données de la table `sponsoring`
---
-
-INSERT INTO `sponsoring` (`idSponsoring`, `nomSponsoring`, `dateDebut`, `dateFin`, `montant`, `etat`, `idSponsor`, `idMarathon`) VALUES
-(7, 'pdfvvvvbbbbb', '2026-04-17', '2026-04-23', 155, 'Actif', 15, 1),
-(11, 'Decathlon', '2026-04-02', '2026-04-17', 750, 'Terminé', 15, 1),
-(12, 'contra', '2026-04-17', '2026-04-26', 100, 'Actif', 15, 1),
-(14, 'Decathlonffff', '2026-04-10', '2026-04-19', 100, 'Actif', 15, 1),
-(15, 'Decathlon', '2026-04-10', '2026-04-25', 1000000, 'Actif', 19, 1),
-(18, 'rgd', '2026-04-01', '2026-04-25', 10000, 'Actif', 19, 1),
-(19, 'ziwziw', '2026-04-21', '2026-04-29', 100, 'Actif', 19, 1),
-(24, 'abcdgtrgrgrtg', '2026-04-01', '2026-04-25', 100, 'Actif', 15, 1),
-(25, 'abcd', '2026-04-01', '2026-04-07', 100, 'Actif', 15, 1),
-(29, 'courir pour sauver les abeilles', '2026-04-30', '2026-05-29', 2000, 'Actif', 24, 1);
-
---
 -- Index pour les tables déchargées
 --
 
@@ -74,7 +58,7 @@ ALTER TABLE `sponsoring`
 -- AUTO_INCREMENT pour la table `sponsoring`
 --
 ALTER TABLE `sponsoring`
-  MODIFY `idSponsoring` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `idSponsoring` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- Contraintes pour les tables déchargées

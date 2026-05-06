@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : sam. 02 mai 2026 à 18:28
+-- Généré le : mer. 06 mai 2026 à 15:12
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -39,15 +39,6 @@ CREATE TABLE `sponsor` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Déchargement des données de la table `sponsor`
---
-
-INSERT INTO `sponsor` (`idSponsor`, `nom`, `type`, `adresse`, `contact`, `email`, `pageWeb`, `idUser`) VALUES
-(15, 'Decathlon', 'Association', 'rue hbib bourguiba', '11111111', 'monemail@tac.tac', 'https://www.decathlon.tn/?utm_source=google&utm_medium=cpc&utm_campaign=tn_ct-search_t-perf_n-local-winter-sales_nc-search-sales_ts-bra_f-cv_o-conv_&utm_id=%7Bcampaignid%7D-%7Badgroupid%7D-%7Bassetgroupid%7D&https://www.decathlon.tn/?utm_source=google&utm', 1),
-(19, 'abcd', 'Entreprise', 'rue de rené alphabet', '11111111', 'ab@cd.ef', '', 1),
-(24, 'la casa de papel', 'Particulier', 'rue mendés tunisie', '67676767', 'casa@de.papel', '', 1);
-
---
 -- Index pour les tables déchargées
 --
 
@@ -66,7 +57,7 @@ ALTER TABLE `sponsor`
 -- AUTO_INCREMENT pour la table `sponsor`
 --
 ALTER TABLE `sponsor`
-  MODIFY `idSponsor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `idSponsor` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- Contraintes pour les tables déchargées

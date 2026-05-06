@@ -102,6 +102,110 @@
 
 
 
+
+    /* 🔥 CONTENEUR GLOBAL */
+.chat-box {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+
+    width: 350px;
+    height: 350px;
+
+    max-width: 90%;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+
+    z-index: 9999; /* 🔥 important pour rester au-dessus */
+}
+
+/* 📜 ZONE DES MESSAGES */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f7f7f8;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 💬 BULLES */
+.message {
+    margin: 10px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    max-width: 75%;
+    font-size: 1.2em;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* 👤 UTILISATEUR */
+.user {
+    background: #007bff;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+/* 🤖 IA */
+.bot {
+    background: #e5e5ea;
+    color: black;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+/* ⌨️ ZONE INPUT */
+.chat-input-area {
+    display: flex;
+    border-top: 1px solid #ccc;
+    background: #fff;
+}
+
+/* 📝 INPUT */
+.chat-input-area input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    outline: none;
+    font-size: 1.1em;
+    border-bottom-left-radius: 12px;
+}
+
+/* 🔘 BOUTON */
+.chat-input-area button {
+    padding: 12px 18px;
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    border-bottom-right-radius: 12px;
+    transition: background 0.2s;
+}
+
+.chat-input-area button:hover {
+    background: #0056b3;
+}
+
+/* 📱 RESPONSIVE (mobile) */
+@media (max-width: 600px) {
+    .chat-box {
+        width: 95%;
+        height: 450px;
+    }
+
+    .message {
+        font-size: 1.1em;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -130,7 +234,7 @@
         <div class="section-title">
             <div>
                 <h1>Voir sponsors</h1>
-                <span>Consultez les sponsors, sponsoring et fournitures.</span>
+                <span>Consultez les sponsors et les sponsoring</span>
            
 
         <section id="sponsors" class="section-card">
@@ -236,101 +340,19 @@
             </div>
             </section>
 
-        <section id="fournitures" class="section-card">
-            <h2>Fournitures</h2>
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:22px; gap:20px;">
-                <div class="search-box" style="width:125px;">
-                    <label>
-                        Rechercher une fourniture
-                    <input type="search" placeholder="rechercher par nom">
-                    </label>
+        
+
+            <div class="chat-box">
+
+                <div id="chatMessages" class="chat-messages"></div>
+
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Pose ta question...">
+                    <button onclick="sendChat()">Envoyer</button>
                 </div>
-                <div class="filter-group">
-                    <label>
-                        Filtrer par type
-                        <select>
-                            <option>Tout</option>
-                            <option>Nourritures</option>
-                            <option>Vêtements</option>
-                            <option>Matériel médical</option>
-                            <option>Caméra</option>
-                            <option>Micro</option>
-                        </select>
-                    </label>
-                    <label>
-                        Filtrer par quantité
-                        <select>
-                            <option>Tout</option>
-                            <option>0-100</option>
-                            <option>100-500</option>
-                            <option>500+</option>
-                        </select>
-                    </label>
-                    <label>
-                        Filtrer par prix unitaire
-                        <select>
-                            <option>Tout</option>
-                            <option>0-5€</option>
-                            <option>5-10€</option>
-                            <option>10+€</option>
-                        </select>
-                    </label>
-                    <label>
-                        Filtrer par date fourniture
-                        <select>
-                            <option>Tout</option>
-                            <option>2026-04</option>
-                            <option>2026-05</option>
-                            <option>2026-06</option>
-                        </select>
-                    </label>
-                </div>
-            </div>
-            <div class="table-shell">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Type</th>
-                            <th>Nom fourniture</th>
-                            <th>Quantité</th>
-                            <th>Prix unitaire</th>
-                            <th>Description</th>
-                            <th>Date fourniture</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>301</td>
-                            <td>Nourritures</td>
-                            <td>Barres énergétiques</td>
-                            <td>1200</td>
-                            <td>1,80 €</td>
-                            <td>Collations pour coureurs</td>
-                            <td>2026-04-10</td>
-                        </tr>
-                        <tr>
-                            <td>302</td>
-                            <td>Vêtements</td>
-                            <td>T-shirts officiels</td>
-                            <td>500</td>
-                            <td>8,50 €</td>
-                            <td>Maillots de l'événement</td>
-                            <td>2026-04-18</td>
-                        </tr>
-                        <tr>
-                            <td>303</td>
-                            <td>Matériel médical</td>
-                            <td>Trousse premiers secours</td>
-                            <td>30</td>
-                            <td>45,00 €</td>
-                            <td>Équipement de secours</td>
-                            <td>2026-04-08</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-           </section>
+
+
+
     </div>
 
     <script>
@@ -480,6 +502,54 @@
                 rows.forEach(row => tbody.appendChild(row));
             });
         }
+
+
+
+
+
+
+       function addMessage(text, type) {
+    let container = document.getElementById("chatMessages");
+
+    let msg = document.createElement("div");
+    msg.classList.add("message", type);
+    msg.innerText = text;
+
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+
+    return msg;
+    }
+
+    function sendChat() {
+
+        let input = document.getElementById("chatInput");
+        let msg = input.value;
+
+        if (!msg.trim()) return;
+
+        // 🔹 Message utilisateur
+        addMessage(msg, "user");
+
+        input.value = "";
+
+        // 🔹 Message temporaire "Réflexion..."
+        let thinkingMsg = addMessage("🤔 Réflexion...", "bot");
+
+        fetch("chatSponsor_process.php", {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: "message=" + encodeURIComponent(msg)
+        })
+        .then(res => res.text())
+        .then(data => {
+            // 🔥 remplacer "Réflexion..." par vraie réponse
+            thinkingMsg.innerText = data;
+        })
+        .catch(error => {
+            thinkingMsg.innerText = "Erreur : " + error.message;
+        });
+    }
     </script>
 </body>
 </html>

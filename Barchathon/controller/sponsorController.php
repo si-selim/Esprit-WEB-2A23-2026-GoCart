@@ -162,8 +162,7 @@ class sponsorController {
                         echo "<td>";
                         if ($showActions) {
                             echo "<button class='btn btn-secondary view-sponsoring-btn' data-sponsor-id='{$row['idSponsor']}'>Voir sponsoring</button>";
-                            echo "<a href='#fournitures' class='btn btn-secondary'>Voir fourniture</a>";
-                            echo "<div class='row-actions'>";
+                             echo "<div class='row-actions'>";
                             echo '<a href="deleteSponsor.php?id=' . $row['idSponsor'] . '" class="icon-btn icon-delete delete-sponsor-btn" data-sponsor-name="' . htmlspecialchars($row['nom'], ENT_QUOTES) . '" title="Supprimer"></a>';
                             echo "<a href='modifySponsor.php?id={$row['idSponsor']}' class='icon-btn icon-edit' title='Modifier'></a>";
                             echo "</div>";
@@ -173,8 +172,7 @@ class sponsorController {
                             echo "</div>";
                         } elseif ($viewOnly) {
                             echo "<button class='btn btn-secondary view-sponsoring-btn' data-sponsor-id='{$row['idSponsor']}'>Voir sponsoring</button>";
-                            echo "<a href='#fournitures' class='btn btn-secondary'>Voir fourniture</a>";
-                        }
+                            }
                         echo "</td>";
                     }
                 }

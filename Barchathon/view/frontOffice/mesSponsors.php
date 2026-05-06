@@ -119,10 +119,167 @@
     .fo-role-badge { background:rgba(15,118,110,.12); color:#0f766e; border-radius:999px; padding:2px 8px; font-size:0.75rem; font-weight:700; }
     @media(max-width:768px){ .fo-topbar-shell{flex-wrap:wrap;padding:10px 0;min-height:auto;} .fo-nav{width:100%;} }
 
+
+
+
+/*
+    .chat-box {
+    width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    font-family: Arial;
+}
+
+.chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+.message {
+    margin: 8px 0;
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 80%;
+}
+
+.user {
+    background: #007bff;
+    color: white;
+    align-self: flex-end;
+}
+
+.bot {
+    background: #e5e5ea;
+    color: black;
+    align-self: flex-start;
+}
+
+.chat-input-area {
+    display: flex;
+    border-top: 1px solid #ccc;
+}
+
+.chat-input-area input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+}
+
+.chat-input-area button {
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+}*/
         
 
 
+    /* 🔥 CONTENEUR GLOBAL */
+.chat-box {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
 
+    width: 350px;
+    height: 350px;
+
+    max-width: 90%;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+
+    z-index: 9999; /* 🔥 important pour rester au-dessus */
+}
+
+/* 📜 ZONE DES MESSAGES */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f7f7f8;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 💬 BULLES */
+.message {
+    margin: 10px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    max-width: 75%;
+    font-size: 1.2em;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* 👤 UTILISATEUR */
+.user {
+    background: #007bff;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+/* 🤖 IA */
+.bot {
+    background: #e5e5ea;
+    color: black;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+/* ⌨️ ZONE INPUT */
+.chat-input-area {
+    display: flex;
+    border-top: 1px solid #ccc;
+    background: #fff;
+}
+
+/* 📝 INPUT */
+.chat-input-area input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    outline: none;
+    font-size: 1.1em;
+    border-bottom-left-radius: 12px;
+}
+
+/* 🔘 BOUTON */
+.chat-input-area button {
+    padding: 12px 18px;
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+    border-bottom-right-radius: 12px;
+    transition: background 0.2s;
+}
+
+.chat-input-area button:hover {
+    background: #0056b3;
+}
+
+/* 📱 RESPONSIVE (mobile) */
+@media (max-width: 600px) {
+    .chat-box {
+        width: 95%;
+        height: 450px;
+    }
+
+    .message {
+        font-size: 1.1em;
+    }
+}
 
     </style>
 </head>
@@ -154,7 +311,7 @@
         <div class="section-title">
             <div>
                 <h1>Gérer mes sponsors</h1>
-                <span>Consultez et modifiez vos sponsors, sponsoring et fournitures en tant qu'organisateur.</span>
+                <span>Consultez et modifiez vos sponsors et vos sponsoring en tant qu'organisateur.</span>
             
 
         <section id="sponsors" class="section-card">
@@ -285,129 +442,21 @@
             <p class="note">Aucune modification réelle n'est appliquée : c'est une interface de gestion pour organisateur.</p>
         </section>
 
-        <section id="fournitures" class="section-card">
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <a class="btn btn-primary" href="addFourniture.html" title="Ajouter une fourniture">
-                        <span>+</span> Ajouter
-                    </a>
-                </div>
-                <div class="toolbar-right">
-                    <div class="search-box">
-                        <label>
-                            Rechercher une fourniture
-                        <input type="search" placeholder="rechercher par nom">
-                        </label>
-                    </div>
-                    <div class="filter-group">
-                        <label>
-                            Filtrer par type
-                            <select>
-                                <option>Tout</option>
-                                <option>Nourritures</option>
-                                <option>Vêtements</option>
-                                <option>Matériel médical</option>
-                                <option>Caméra</option>
-                                <option>Micro</option>
-                            </select>
-                        </label>
-                        <label>
-                            Filtrer par quantité
-                            <select>
-                                <option>Tout</option>
-                                <option>0-100</option>
-                                <option>100-500</option>
-                                <option>500+</option>
-                            </select>
-                        </label>
-                        <label>
-                            Filtrer par prix unitaire
-                            <select>
-                                <option>Tout</option>
-                                <option>0-5€</option>
-                                <option>5-10€</option>
-                                <option>10+€</option>
-                            </select>
-                        </label>
-                        <label>
-                            Filtrer par date fourniture
-                            <select>
-                                <option>Tout</option>
-                                <option>2026-04</option>
-                                <option>2026-05</option>
-                                <option>2026-06</option>
-                            </select>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <h2>Fournitures</h2>
-            <div class="table-shell">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Actions</th>
-                            <th>#</th>
-                            <th>Type</th>
-                            <th>Nom fourniture</th>
-                            <th>Quantité</th>
-                            <th>Prix unitaire</th>
-                            <th>Description</th>
-                            <th>Date fourniture</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="row-actions">
-                                    <button class="icon-btn icon-delete" title="Supprimer"></button>
-                                    <a href="modifyFourniture.html" class="icon-btn icon-edit" title="Modifier"></a>
-                                </div>
-                            </td>
-                            <td>301</td>
-                            <td>Nourritures</td>
-                            <td>Barres énergétiques</td>
-                            <td>1200</td>
-                            <td>1,80 €</td>
-                            <td>Collations pour coureurs</td>
-                            <td>2026-04-10</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="row-actions">
-                                    <button class="icon-btn icon-delete" title="Supprimer"></button>
-                                    <a href="modifyFourniture.html" class="icon-btn icon-edit" title="Modifier"></a>
-                                </div>
-                            </td>
-                            <td>302</td>
-                            <td>Vêtements</td>
-                            <td>T-shirts officiels</td>
-                            <td>500</td>
-                            <td>8,50 €</td>
-                            <td>Maillots de l'événement</td>
-                            <td>2026-04-18</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="row-actions">
-                                    <button class="icon-btn icon-delete" title="Supprimer"></button>
-                                    <a href="modifyFourniture.html" class="icon-btn icon-edit" title="Modifier"></a>
-                                </div>
-                            </td>
-                            <td>303</td>
-                            <td>Matériel médical</td>
-                            <td>Trousse premiers secours</td>
-                            <td>30</td>
-                            <td>45,00 €</td>
-                            <td>Équipement de secours</td>
-                            <td>2026-04-08</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <button class="btn btn-secondary export-btn">Exporter</button>
-            <p class="note">Le tableau de fournitures contient les détails de marchandise et le bouton d'ajout mène au formulaire statique.</p>
-        </section>
+        
+        <div class="chat-box">
+
+            <div id="chatMessages" class="chat-messages"></div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Pose ta question...">
+                <button onclick="sendChat()">Envoyer</button>
+        </div>
+
+</div>
+
+</div>  
+
+
     </div>
 
     <div class="modal-overlay" id="deleteModal">
@@ -702,6 +751,82 @@ function applyAutoWidth(ws) {
     }
 
     ws["!cols"] = colWidths;
+}
+
+
+
+
+
+/*
+function sendChat() {
+
+    let msg = document.getElementById("chatInput").value;
+
+    if (!msg.trim()) return; // Ne pas envoyer si vide
+
+    fetch("chatSponsor_process.php", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "message=" + encodeURIComponent(msg)
+    })
+    .then(res => res.text())
+    .then(data => {
+        document.getElementById("chatResponse").innerHTML =
+            "<p><b>IA:</b> " + data + "</p>";
+        document.getElementById("chatInput").value = ""; // Vider l'input
+    })
+    .catch(error => {
+        document.getElementById("chatResponse").innerHTML =
+            "<p><b>Erreur:</b> Impossible d'envoyer le message. " + error.message + "</p>";
+    });
+}*/
+
+
+
+
+
+
+function addMessage(text, type) {
+    let container = document.getElementById("chatMessages");
+
+    let msg = document.createElement("div");
+    msg.classList.add("message", type);
+    msg.innerText = text;
+
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+
+    return msg;
+}
+
+function sendChat() {
+
+    let input = document.getElementById("chatInput");
+    let msg = input.value;
+
+    if (!msg.trim()) return;
+
+    // 🔹 Message utilisateur
+    addMessage(msg, "user");
+
+    input.value = "";
+
+    // 🔹 Message temporaire "Réflexion..."
+    let thinkingMsg = addMessage("🤔 Réflexion...", "bot");
+
+    fetch("chatSponsor_process.php", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "message=" + encodeURIComponent(msg)
+    })
+    .then(res => res.text())
+    .then(data => {
+        // 🔥 remplacer "Réflexion..." par vraie réponse
+        thinkingMsg.innerText = data;
+    })
+    .catch(error => {
+        thinkingMsg.innerText = "Erreur : " + error.message;
+    });
 }
     </script>
 </body>
