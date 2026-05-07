@@ -1,0 +1,8 @@
+{
+    "name": "integ-standproduit/payment",
+    "description": "Integration Stripe payment",
+    "require": {
+        "stripe/stripe-php": "^11.0",
+        "google/apiclient": "^2.15"
+    }
+}
