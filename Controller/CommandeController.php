@@ -190,10 +190,11 @@ class CommandeController {
      * Suit la chaîne : stand -> parcours -> marathon -> organisateur
      */
     public function getOrganisateurByStand($idStand) {
-        $sql = "SELECT m.organisateur_marathon 
+        $sql = "SELECT u.id_user 
                 FROM stand s 
                 JOIN parcours p ON s.ID_parcours = p.id_parcours 
                 JOIN marathon m ON p.id_marathon = m.id_marathon 
+                JOIN user u ON m.organisateur_marathon = u.nom_complet
                 WHERE s.ID_stand = :id_stand";
         
         $db = config::getConnexion();
@@ -201,7 +202,7 @@ class CommandeController {
             $query = $db->prepare($sql);
             $query->execute(['id_stand' => $idStand]);
             $result = $query->fetch(PDO::FETCH_ASSOC);
-            return $result ? $result['organisateur_marathon'] : null;
+            return $result ? $result['id_user'] : null;
         } catch (Exception $e) {
             error_log('Error getOrganisateurByStand: ' . $e->getMessage());
             return null;
