@@ -11,7 +11,7 @@ require_once __DIR__ . '/../../StripePayment.php';
 
 header('Content-Type: application/json');
 
-$stripe_secret = 'your stripe_secret_key_here'; // Remplacez par votre clé secrète Stripe
+$stripe_secret = ''; // Remplacez par votre clé secrète Stripe
 $stripe = new StripePayment($stripe_secret);
 
 $user = getCurrentUser();
@@ -36,6 +36,15 @@ $parcours_id = isset($_POST['parcours_id']) ? (int)$_POST['parcours_id'] : 0;
 $stand_id = isset($_POST['stand_id']) ? (int)$_POST['stand_id'] : 0;
 
 $userId = $user['id_user'] ?? $user['id'];
+$commandeC = new CommandeController();
+$existingOrder = $id > 0 ? $commandeC->showCommande($id) : null;
+$existingOrderOwner = $existingOrder && $existingOrder['idutilisateur'] == $userId;
+
+if ($existingOrder && !$existingOrderOwner) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Commande invalide.']);
+    exit;
+}
 
 if (!$paymentMethodId || !$type || !$montant || ($type === 'marathon' && !$id)) {
     http_response_code(400);
@@ -46,18 +55,20 @@ if (!$paymentMethodId || !$type || !$montant || ($type === 'marathon' && !$id)) 
 try {
         if ($type === 'commande') {
             $prodCtrl = new ProduitController();
-            if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Le panier est vide.']);
-                exit;
-            }
-
-            foreach ($_SESSION['cart'] as $item) {
-                $currentProduct = $prodCtrl->getProduit($item['idproduit']);
-                if (!$currentProduct || !$currentProduct['en_out_stock'] || $currentProduct['qte_stock'] < $item['quantite']) {
+            if (!$existingOrder || !$existingOrderOwner) {
+                if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
                     http_response_code(400);
-                    echo json_encode(['error' => 'Stock insuffisant pour l’un des produits du panier. Ajustez votre commande.']);
+                    echo json_encode(['error' => 'Le panier est vide.']);
                     exit;
+                }
+
+                foreach ($_SESSION['cart'] as $item) {
+                    $currentProduct = $prodCtrl->getProduit($item['idproduit']);
+                    if (!$currentProduct || !$currentProduct['en_out_stock'] || $currentProduct['qte_stock'] < $item['quantite']) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'Stock insuffisant pour l’un des produits du panier. Ajustez votre commande.']);
+                        exit;
+                    }
                 }
             }
         }
@@ -107,21 +118,9 @@ try {
             $ligneC = new LigneCommandeController();
             $prodCtrl = new ProduitController();
 
-            $commande = new Commande(null, $userId, $stand_id ?: null, date('Y-m-d H:i:s'), 'en cours', $montant, 'stripe');
-            $newCommandeId = $commandeC->addCommande($commande);
-
-            if ($newCommandeId) {
-                if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
-                    foreach ($_SESSION['cart'] as $item) {
-                        $ligne = new LigneCommande(null, $newCommandeId, $item['idproduit'], $item['quantite'], $item['prix']);
-                        $ligneC->addLigneCommande($ligne);
-                        $prodCtrl->decrementStock($item['idproduit'], $item['quantite']);
-                    }
-                }
-
-                $_SESSION['cart'] = [];
+            if ($existingOrder && $existingOrderOwner && strtolower(trim($existingOrder['statut'])) === 'en cours') {
+                $commandeC->updateCommandePayment($id, 'confirmé', 'stripe');
                 $_SESSION['success_message'] = '✅ Paiement confirmé !';
-
                 $userEmail = $user['email'] ?? '';
                 if ($userEmail) {
                     $subject = 'Confirmation de paiement - BarchaThon';
@@ -137,8 +136,39 @@ try {
                     'redirect' => 'Mes commandes.php'
                 ]);
             } else {
-                http_response_code(500);
-                echo json_encode(['error' => 'Erreur lors de la création de la commande']);
+                $commande = new Commande(null, $userId, $stand_id ?: null, null, date('Y-m-d H:i:s'), 'confirmé', $montant, 'stripe');
+                $newCommandeId = $commandeC->addCommande($commande);
+
+                if ($newCommandeId) {
+                    if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
+                        foreach ($_SESSION['cart'] as $item) {
+                            $ligne = new LigneCommande(null, $newCommandeId, $item['idproduit'], $item['quantite'], $item['prix']);
+                            $ligneC->addLigneCommande($ligne);
+                            $prodCtrl->decrementStock($item['idproduit'], $item['quantite']);
+                        }
+                    }
+
+                    $_SESSION['cart'] = [];
+                    $_SESSION['success_message'] = '✅ Paiement confirmé !';
+
+                    $userEmail = $user['email'] ?? '';
+                    if ($userEmail) {
+                        $subject = 'Confirmation de paiement - BarchaThon';
+                        $body = "<p>Bonjour,</p>\n"
+                              . "<p>Votre paiement de <strong>" . number_format($montant, 2, ',', ' ') . " TND</strong> a bien été enregistré.</p>\n"
+                              . "<p>Vous pouvez consulter votre commande et vos détails sur la page <a href='https://{$_SERVER['HTTP_HOST']}/Integ-standProduit/View/FrontOffice/Mes%20commandes.php'>Voir mes commandes</a>.</p>\n"
+                              . "<p>Merci pour votre confiance.</p>";
+                        Mailer::send($userEmail, $subject, $body);
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'redirect' => 'Mes commandes.php'
+                    ]);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['error' => 'Erreur lors de la création de la commande']);
+                }
             }
         } else {
             http_response_code(400);

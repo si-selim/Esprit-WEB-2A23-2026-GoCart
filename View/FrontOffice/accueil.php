@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/../../Controller/MarathonController.php';
 $controller = new MarathonController();
 $stats = $controller->statsNbMarathonsDispo();
@@ -10,11 +11,11 @@ $user = getCurrentUser();
 $role = $user['role'] ?? 'visiteur';
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?php echo current_lang(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Accueil — BarchaThon</title>
+    <title><?php echo t('home_title'); ?> — BarchaThon</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root { --ink:#102a43; --teal:#0f766e; --sun:#ffb703; --coral:#e76f51; --sea:#0ea5e9; --clay:#c2410c; }
@@ -115,6 +116,46 @@ $role = $user['role'] ?? 'visiteur';
     font-size: 2.5rem !important;
     margin-bottom: 25px;
 }
+
+/* ── Photo Carousel ── */
+.carousel-section { margin:48px 0 56px; overflow:hidden; }
+.carousel-section h2 { font-size:1.55rem; font-weight:900; margin-bottom:24px; color:var(--ink); }
+.carousel-section h2 span { color:var(--teal); }
+
+.carousel-track-wrap { overflow:hidden; border-radius:20px; position:relative; }
+.carousel-track-wrap::before,
+.carousel-track-wrap::after {
+    content:''; position:absolute; top:0; bottom:0; width:80px; z-index:2; pointer-events:none;
+}
+.carousel-track-wrap::before { left:0;  background:linear-gradient(to right, #fdfaf4, transparent); }
+.carousel-track-wrap::after  { right:0; background:linear-gradient(to left,  #fdfaf4, transparent); }
+
+.carousel-track {
+    display:flex; gap:18px;
+    animation: carousel-scroll 22s linear infinite;
+    width:max-content;
+}
+.carousel-track:hover { animation-play-state:paused; }
+
+.carousel-slide {
+    flex:0 0 320px; height:210px;
+    border-radius:18px; overflow:hidden;
+    box-shadow:0 6px 24px rgba(16,42,67,.13);
+    transition:transform .3s, box-shadow .3s;
+    cursor:pointer;
+}
+.carousel-slide:hover { transform:scale(1.04); box-shadow:0 12px 36px rgba(15,118,110,.25); }
+.carousel-slide img { width:100%; height:100%; object-fit:cover; display:block; }
+
+@keyframes carousel-scroll {
+    0%   { transform:translateX(0); }
+    100% { transform:translateX(-50%); }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .carousel-section h2 { color:#f1f5f9; }
+html[data-theme="dark"] .carousel-track-wrap::before { background:linear-gradient(to right, #0f172a, transparent); }
+html[data-theme="dark"] .carousel-track-wrap::after  { background:linear-gradient(to left,  #0f172a, transparent); }
     </style>
 </head>
 <body>
@@ -124,12 +165,12 @@ $role = $user['role'] ?? 'visiteur';
     <!-- HERO avec nouvelle photo -->
     <section class="hero">
         <div>
-            <h1>Courez la Tunisie avec BarchaThon</h1>
-            <p>La plateforme des marathons tunisiens. Découvrez les événements, choisissez votre parcours et vivez l'expérience unique.</p>
+            <h1><?php echo t('home_hero_title'); ?></h1>
+            <p><?php echo t('home_hero_subtitle'); ?></p>
             <div class="hero-btns">
-                <a href="listMarathons.php" class="btn btn-primary">🏃 Voir le Catalogue</a>
+                <a href="listMarathons.php" class="btn btn-primary">🏃 <?php echo t('home_hero_cta'); ?></a>
                 <?php if ($role === 'visiteur'): ?>
-                    <a href="register.php" class="btn btn-outline">S'inscrire</a>
+                    <a href="register.php" class="btn btn-outline"><?php echo t('home_hero_signup'); ?></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -140,42 +181,58 @@ $role = $user['role'] ?? 'visiteur';
 
     <!-- 4 STATS : Marathons + Places + 100% catalogue + 24/7 -->
     <section class="stats-section">
-        <h2>📊 En quelques chiffres</h2>
+        <h2>📊 <?php echo t('home_stats_title'); ?></h2>
         <div class="stats-bar">
             <div class="stat-card">
                 <div class="stat-icon">🏃</div>
                 <div class="stat-val"><?php echo $totalMarathons; ?></div>
-                <div class="stat-lbl">Marathons disponibles</div>
+                <div class="stat-lbl"><?php echo t('home_stat_marathons'); ?></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">🎟️</div>
                 <div class="stat-val"><?php echo number_format((float)($stats['total_places'] ?? 0)); ?></div>
-                <div class="stat-lbl">Places disponibles</div>
+                <div class="stat-lbl"><?php echo t('home_stat_places'); ?></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">📋</div>
                 <div class="stat-val">100%</div>
-                <div class="stat-lbl">Catalogue consultable</div>
+                <div class="stat-lbl"><?php echo t('home_stat_catalog'); ?></div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">🕐</div>
                 <div class="stat-val">24/7</div>
-                <div class="stat-lbl">Consultation visiteur</div>
+                <div class="stat-lbl"><?php echo t('home_stat_24_7'); ?></div>
             </div>
         </div>
     </section>
 
     <section class="features-section">
     <div class="container">
-        <h1>🏅 Pourquoi BarchaThon ?</h1>
+        <h1>🏅 <?php echo t('home_features_title'); ?></h1>
         <p class="features-text">
-           Bienvenue sur BarchaThon, votre site dédié à l’univers du running en Tunisie.
-Nous vous proposons une diversité de marathons offrant différentes expériences.
-
-Pour chaque événement, vous pouvez consulter les informations essentielles du parcours, ainsi que les stands présents tout au long de la course.
-
-En plus de découvrir les courses, notre site vous permet également d’explorer des produits liés à vos événements préférés et de gérer vos commandes facilement pour une expérience sportive complète.
+           <?php echo t('home_features_text'); ?>
         </p>
+    </div>
+</section>
+
+<!-- ── Photo Carousel ── -->
+<section class="carousel-section">
+    <h2>📸 Moments du <span>BarchaThon</span></h2>
+    <div class="carousel-track-wrap">
+        <div class="carousel-track" id="carouselTrack">
+            <!-- Original set -->
+            <div class="carousel-slide"><img src="images/marathon/m1.png" alt="BarchaThon moment 1" loading="lazy"></div>
+            <div class="carousel-slide"><img src="images/marathon/m2.jpg" alt="BarchaThon moment 2" loading="lazy"></div>
+            <div class="carousel-slide"><img src="images/marathon/m3.jpg" alt="BarchaThon moment 3" loading="lazy"></div>
+            <div class="carousel-slide"><img src="images/marathon/m4.jpg" alt="BarchaThon moment 4" loading="lazy"></div>
+            <div class="carousel-slide"><img src="images/marathon/m5.jpg" alt="BarchaThon moment 5" loading="lazy"></div>
+            <!-- Duplicate set for seamless loop -->
+            <div class="carousel-slide"><img src="images/marathon/m1.png" alt="BarchaThon moment 1" loading="lazy"></div>
+            <div class="carousel-slide"><img src="images/marathon/m2.jpg" alt="BarchaThon moment 2" loading="lazy"></div>
+            <div class="carousel-slide"><img src="images/marathon/m3.jpg" alt="BarchaThon moment 3" loading="lazy"></div>
+            <div class="carousel-slide"><img src="images/marathon/m4.jpg" alt="BarchaThon moment 4" loading="lazy"></div>
+            <div class="carousel-slide"><img src="images/marathon/m5.jpg" alt="BarchaThon moment 5" loading="lazy"></div>
+        </div>
     </div>
 </section>
 

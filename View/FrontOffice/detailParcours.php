@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/../../Controller/InscriptionMarathonController.php';
 require_once __DIR__ . '/../../Controller/ParcoursController.php';
 require_once __DIR__ . '/../../Controller/StandController.php';
@@ -195,6 +196,18 @@ if (isset($_SESSION['error_message'])): ?>
                         <div class="icon">🏁</div>
                         <div><div class="label">Arrivée</div><div class="value"><?php echo htmlspecialchars($p['point_arrivee']); ?></div></div>
                     </div>
+                    <?php if (!empty($p['heure_depart'])): ?>
+                    <div class="meta-row">
+                        <div class="icon">⏰</div>
+                        <div><div class="label">Heure de Départ</div><div class="value"><?php echo htmlspecialchars(substr($p['heure_depart'], 0, 5)); ?></div></div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if (!empty($m['date_marathon'])): ?>
+                    <div class="meta-row">
+                        <div class="icon">🌤️</div>
+                        <div><div class="label">Date du Marathon</div><div class="value"><?php echo date('d/m/Y', strtotime($m['date_marathon'])); ?></div></div>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -223,10 +236,10 @@ if (isset($_SESSION['error_message'])): ?>
                     <div style="font-size: 0.9rem; opacity: 0.9;">Plus de places disponibles</div>
                 </div>
             <?php else: ?>
-                <a href="inscrire_marathon.php?id=<?php echo $m['id_marathon']; ?>&parcours_id=<?php echo $p['id_parcours']; ?>"
-                   style="background: linear-gradient(135deg, var(--teal), #14b8a6); color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 6px 18px rgba(15, 118, 110, 0.3); transition: transform 0.15s;">
-                    <i class="fas fa-running"></i> Participer au marathon
-                </a>
+                <a href="inscription.php?id=<?php echo $m['id_marathon']; ?>&parcours_id=<?php echo $p['id_parcours']; ?>"
+   style="background: linear-gradient(135deg, var(--teal), #14b8a6); color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 1rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 6px 18px rgba(15, 118, 110, 0.3); transition: transform 0.15s;">
+    <i class="fas fa-running"></i> Participer au marathon
+</a>
                 <div style="margin-top: 12px; font-size: 0.9rem; opacity: 0.8;">
                     <?php echo $m['prix_marathon'] == 0 ? 'Inscription gratuite' : 'Paiement requis'; ?>
                 </div>
@@ -247,11 +260,12 @@ if (isset($_SESSION['error_message'])): ?>
         </div>
     </div>
 
-    <?php if ($role === 'organisateur'): ?>
     <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;justify-content:flex-end;">
-        <a href="Stands/crud-stand.php?parcours_id=<?php echo $id; ?>" class="btn btn-primary" style="padding:11px 20px;"><i class="fa-solid fa-plus"></i> Ajouter un stand</a>
+        <a href="Stands/listStandsFront.php" class="btn" style="background:var(--teal); color:white; padding:11px 20px;"><i class="fa-solid fa-list"></i> Tous les stands</a>
+        <?php if ($role === 'organisateur'): ?>
+            <a href="Stands/crud-stand.php?parcours_id=<?php echo $id; ?>" class="btn btn-primary" style="padding:11px 20px;"><i class="fa-solid fa-plus"></i> Ajouter un stand</a>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
 
     <div class="cards-grid" id="standsGrid">
         <?php if (empty($stands)): ?>

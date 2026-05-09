@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../partials/session.php';
+require_once __DIR__ . '/../lang.php';
 require_once __DIR__ . '/../../../Controller/standcontroller.php';
 require_once __DIR__ . '/../../../Controller/ParcoursController.php';
 
@@ -21,7 +22,7 @@ $currentPage = 'stands';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catalogue des Stands | BarchaThon</title>
+    <title><?php echo t('st_hero_title'); ?> | BarchaThon</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root { --ink:#102a43; --teal:#0f766e; --sun:#ffb703; --coral:#e76f51; }
@@ -161,7 +162,7 @@ $currentPage = 'stands';
 
     <section class="hero-strip">
         <div class="hero-card">
-            <h1>Catalogue des Stands</h1>
+            <h1><?php echo t('st_hero_title'); ?></h1>
             <p>Découvrez l'emplacement et les services de chaque stand sur nos parcours.</p>
         </div>
         <div class="hero-stats">
@@ -213,9 +214,7 @@ $currentPage = 'stands';
                 <option value="nom_desc">Nom (Z-A)</option>
             </select>
             <?php endif; ?>
-            <?php if (isOrganisateur()): ?>
-                <a href="crud-stand.php" class="btn-add">➕ Ajouter un stand</a>
-            <?php endif; ?>
+            <a href="maps.php" class="btn-add" style="background: #2563eb; box-shadow:0 4px 14px rgba(37,99,235,.3);"><i class="fas fa-map-marked-alt"></i> Maps</a>
         </div>
     </div>
 

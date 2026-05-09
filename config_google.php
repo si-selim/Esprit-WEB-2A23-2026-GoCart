@@ -21,9 +21,9 @@
  * This file loads the .local file if present (so your secret never lands in git).
  */
 
-$GOOGLE_CLIENT_ID     = '971036201396-50v6bkmm7mhufhsolarci71dtlvs1nmj.apps.googleusercontent.com';
+$GOOGLE_CLIENT_ID     = '';
 $GOOGLE_CLIENT_SECRET = '';
-$GOOGLE_REDIRECT_URI  = 'http://localhost/Integ-standProduit/View/FrontOffice/google_callback.php';
+$GOOGLE_REDIRECT_URI  = 'http://localhost/Barchathon/View/FrontOffice/google_callback.php';
 
 if (file_exists(__DIR__ . '/config_google.local.php')) {
     require __DIR__ . '/config_google.local.php';

@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/../../Controller/MarathonController.php';
 require_once __DIR__ . '/../../Controller/ParcoursController.php';
 
@@ -37,7 +38,7 @@ $formattedDate = date('d/m/Y', strtotime($marathon['date_marathon']));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmation d'inscription — BarchaThon</title>
+    <title><?php echo t('inscr_conf_title'); ?> — BarchaThon</title>
     <style>
         :root {
             --bg: #f7f6f3;

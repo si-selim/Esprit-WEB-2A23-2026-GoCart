@@ -2,6 +2,11 @@
 include '../../Controller/CommandeController.php';
 include '../../Controller/LigneCommandeController.php';
 
+if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
+$currentPage = 'orderDetails';
+
 $commandeC = new CommandeController();
 $ligneC = new LigneCommandeController();
 $id = isset($_GET['id']) ? $_GET['id'] : null;
@@ -45,6 +50,36 @@ $lignes = $lignesQuery->fetchAll();
         .btn, .btn-inline { display:inline-flex; align-items:center; gap:8px; text-decoration:none; border:0; border-radius:14px; padding:11px 14px; font:inherit; font-weight:700; cursor:pointer; }
         .btn-secondary { background:#f8fafc; color:#102a43; border:1px solid #cbd5e1; }
         .btn-details { background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; }
+        .back-link { display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#0f766e; font-weight:700; margin-bottom:18px; padding:10px 16px; background:white; border-radius:14px; box-shadow:0 10px 24px rgba(15,118,110,.08); font-size:0.95rem; }
+        .print-sheet-header { display:none; gap:14px; align-items:center; padding:18px 22px; border-radius:24px; background:#0f766e; color:#fff; margin-bottom:24px; }
+        .print-sheet-header img { width:72px; height:72px; border-radius:18px; object-fit:cover; box-shadow:0 12px 24px rgba(0,0,0,.18); }
+        .print-sheet-brand { display:grid; line-height:1.05; }
+        .print-sheet-brand strong { font-size:1.4rem; letter-spacing:.03em; }
+        .print-sheet-brand span { color: rgba(255,255,255,.8); font-size:.95rem; }
+        @page { size: auto; margin: 16mm 14mm; }
+        @media print {
+            body { background: #fff; color: #000; }
+            .fo-topbar,
+            .hero,
+            .back-link,
+            .btn,
+            .btn-inline,
+            .fo-topbar-shell,
+            .fo-nav,
+            .fo-link,
+            .fo-cta,
+            .fo-profile,
+            .fo-brand {
+                display: none !important;
+            }
+            .print-sheet-header { display:flex !important; }
+            .wrap { width: auto !important; margin: 0 !important; }
+            .panel { background: transparent !important; box-shadow:none !important; border:none !important; }
+            .table-wrap { overflow: visible !important; }
+            table { width: 100% !important; min-width: 100% !important; border-color: #b8c0cb !important; }
+            th, td { color: #000 !important; }
+            .panel > div[style] { border: 1px solid #e2e8f0; background: #f8fafc !important; }
+        }
         .card { background:#fff; border-radius:24px; box-shadow:0 20px 40px rgba(16,42,67,.08); }
         .card-body { padding:24px; }
         .section-heading { margin-bottom:18px; }
@@ -70,28 +105,18 @@ $lignes = $lignesQuery->fetchAll();
     </style>
 </head>
 <body>
-<div class="fo-topbar">
-    <div class="fo-topbar-shell">
-        <a class="fo-brand" href="index.php">
-            <img class="fo-brand-mark" src="./Mes commandes_files/LOGO.jpg" alt="BarchaThon">
-            <span class="fo-brand-text">
-                <span>BarchaThon</span>
-                <small>Front Office</small>
-            </span>
-        </a>
-        <nav class="fo-nav">
-            <a class="fo-link" href="index.php">Accueil</a>
-            <a class="fo-link" href="produit.php">Catalogue</a>
-            <a class="fo-link" href="notifications.php">Notifications (1)</a>
-            <a class="fo-link" href="Mes commandes.php">Voir mes commandes</a>
-            <a class="fo-profile" href="profile.php">Participant Demo <span class="fo-profile-role">participant</span></a>
-            <a class="fo-link" href="Mes commandes.php?action=logout">Se deconnecter</a>
-        </nav>
-    </div>
-</div>
+<?php require __DIR__ . '/partials/topbar.php'; ?>
 <div class="wrap">
+    <div class="print-sheet-header">
+        <img src="../assets/images/logo_barchathon.jpg" alt="BarchaThon">
+        <div class="print-sheet-brand">
+            <strong>BarchaThon</strong>
+            <span>Commande #<?php echo htmlspecialchars($commande['idcommande']); ?> - Détails de paiement</span>
+        </div>
+    </div>
+    <a class="back-link" href="Mes commandes.php">← Retour à mes commandes</a>
     <section class="hero">
-        <h1>Détails de ma commande</h1>
+        <h1><?php echo t('order_title'); ?></h1>
         <p>Retrouvez le détail et les lignes associées à cette commande.</p>
     </section>
     <section class="panel">
@@ -104,18 +129,23 @@ $lignes = $lignesQuery->fetchAll();
                 <p style="margin:0;"><strong>Statut :</strong>
                 <?php
                 $statusClass = 'badge-pending';
-                switch (strtolower($commande['statut'])) {
+                switch (strtolower(trim($commande['statut']))) {
                     case 'en cours': $statusClass = 'badge-waiting'; break;
-                    case 'validée': $statusClass = 'badge-valid'; break;
                     case 'en attente de validation': $statusClass = 'badge-waiting'; break;
+                    case 'validée':
+                    case 'confirmé':
+                    case 'validé':
+                        $statusClass = 'badge-valid';
+                        break;
                     case 'non valide': $statusClass = 'badge-pending'; break;
                 }
                 ?>
                 <span class="badge <?php echo $statusClass; ?>"><?php echo htmlspecialchars($commande['statut']); ?></span></p>
             </div>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <a href="Mes commandes.php" class="btn btn-secondary">← Retour</a>
-            </div>
+            <div style="display:flex; gap:10px; align-items:center; justify-content:flex-end;">
+            <?php if (strtolower(trim($commande['statut'])) === 'confirmé' || strtolower(trim($commande['statut'])) === 'validée' || strtolower(trim($commande['statut'])) === 'validé'): ?>
+                <button class="btn btn-details" onclick="window.print();">Imprimer</button>
+            <?php endif; ?>
         </div>
         <div class="table-wrap">
             <?php if (count($lignes) > 0): ?>

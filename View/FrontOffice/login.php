@@ -1,5 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/../../Controller/UserController.php';
 
 $error = '';
@@ -12,18 +14,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['password'] ?? '');
     $ctrl = new UserController();
     $row = $ctrl->findByUsername($username);
+    if (!$row) {
+        $row = $ctrl->findByEmail($username);
+    }
     if ($row && password_verify($password, $row['mot_de_passe'])) {
         if (($row['status'] ?? 'active') === 'banned') {
-            $error = 'Votre compte a ete bloque. Contactez un administrateur.';
+            $error = t('login_err_banned');
         } else {
             $_SESSION['user'] = [
                 'id'       => $row['id_user'],
                 'id_user'  => $row['id_user'],
                 'username' => $row['nom_user'],
                 'nom'      => $row['nom_complet'],
+                'nom_complet' => $row['nom_complet'],
+                'nom_user' => $row['nom_user'],
                 'role'     => $row['role'],
                 'email'    => $row['email'],
                 'profile_picture' => $row['profile_picture'],
+                'age'      => $row['age'],
+                'poids'    => $row['poids'],
+                'taille'   => $row['taille'],
             ];
             if ($row['role'] === 'admin') {
                 header('Location: ../BackOffice/dashboard.php');
@@ -33,16 +43,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     } else {
-        $error = 'Nom d\'utilisateur ou mot de passe incorrect.';
+        $error = t('login_err_bad_creds');
     }
 }
+$currentPage = 'login';
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?php echo current_lang(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Se connecter</title>
+    <title><?php echo t('login_title'); ?> — BarchaThon</title>
     <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');</script>
     <style>
         html[data-theme="dark"] body { background:#0f172a !important; }
@@ -67,16 +78,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color:var(--ink);
             background:linear-gradient(180deg,#fefaf0,var(--bg));
             min-height:100vh;
+            display:flex; flex-direction:column;
+        }
+        .auth-shell {
+            flex:1;
             display:flex; align-items:center; justify-content:center;
-            padding:20px;
+            padding:30px 20px;
         }
-
-        /* PAGE NARROW — comme login.html */
-        .page-narrow {
-            width:100%; max-width:460px;
-        }
-
-        /* CARD FORM — comme login.html */
+        .page-narrow { width:100%; max-width:460px; }
         .card-form {
             background:#fff;
             border-radius:24px;
@@ -92,15 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color:#627d98; font-size:0.93rem;
             line-height:1.6; margin-bottom:22px;
         }
-
-        /* ERROR BOX */
         .error-msg {
             background:#fef2f2; border:1px solid #fecaca;
             border-radius:12px; padding:12px 16px;
             color:#b42318; font-size:0.9rem; margin-bottom:18px;
         }
-
-        /* FIELD */
         .field-mb { margin-bottom:18px; }
         .field-mb label {
             display:block; font-weight:700;
@@ -115,8 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             outline:none; border-color:var(--teal);
             box-shadow:0 0 0 3px rgba(15,118,110,.12);
         }
-
-        /* ACTIONS — comme login.html */
         .actions {
             display:flex; gap:12px; margin-top:24px; flex-wrap:wrap;
         }
@@ -137,11 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border:1px solid #cbd5e1; flex:none;
             padding:12px 18px;
         }
-
-        /* FADE IN */
-        .fade-in {
-            animation:fadeIn .4s ease;
-        }
+        .fade-in { animation:fadeIn .4s ease; }
         @keyframes fadeIn {
             from { opacity:0; transform:translateY(12px); }
             to   { opacity:1; transform:translateY(0); }
@@ -149,10 +148,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
+<?php require __DIR__ . '/partials/topbar.php'; ?>
+<div class="auth-shell">
     <div class="page-narrow">
         <div class="card-form fade-in">
-            <h1>Se connecter</h1>
-            <p>Connectez-vous pour accéder à votre espace personnel.</p>
+            <h1><?php echo t('login_title'); ?></h1>
+            <p><?php echo t('login_subtitle'); ?></p>
 
             <?php if ($error): ?>
                 <div id="error-box" class="error-msg">⚠️ <?php echo htmlspecialchars($error); ?></div>
@@ -162,32 +163,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <form method="POST" action="login.php">
                 <div class="field-mb">
-                    <label for="username">Nom d'utilisateur</label>
-                    <input id="username" name="username" type="text" placeholder="Nom d'utilisateur" required value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
+                    <label for="username"><?php echo t('login_username'); ?></label>
+                    <input id="username" name="username" type="text" placeholder="<?php echo htmlspecialchars(t('login_username')); ?>" required value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
                 </div>
                 <div class="field-mb">
-                    <label for="password">Mot de passe</label>
-                    <input id="password" name="password" type="password" placeholder="Mot de passe" required>
+                    <label for="password"><?php echo t('login_password'); ?></label>
+                    <input id="password" name="password" type="password" placeholder="<?php echo htmlspecialchars(t('login_password')); ?>" required>
                 </div>
                 <div class="actions">
-                    <button class="btn btn-primary" type="submit">Connexion</button>
-                    <a class="btn btn-secondary" href="register.php">Creer un compte</a>
-                    <a class="btn btn-secondary" href="accueil.php">Retour</a>
+                    <button class="btn btn-primary" type="submit"><?php echo t('login_submit'); ?></button>
+                    <a class="btn btn-secondary" href="register.php"><?php echo t('login_create_account'); ?></a>
+                    <a class="btn btn-secondary" href="accueil.php"><?php echo t('login_back'); ?></a>
                 </div>
                 <div style="text-align:right;margin-top:12px;">
-                    <a href="forgot_password.php" style="color:#0f766e;font-size:.88rem;font-weight:600;text-decoration:none;">Mot de passe oublie ?</a>
+                    <a href="forgot_password.php" style="color:#0f766e;font-size:.88rem;font-weight:600;text-decoration:none;"><?php echo t('login_forgot'); ?></a>
                 </div>
             </form>
             <div style="text-align:center;margin-top:18px;padding-top:18px;border-top:1px solid #e2e8f0;display:flex;flex-direction:column;gap:10px;align-items:stretch;">
                 <a href="google_login.php" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:11px 18px;background:#fff;color:#3c4043;border:1.5px solid #dadce0;border-radius:12px;text-decoration:none;font-weight:700;font-size:.93rem;transition:box-shadow .15s,background .15s;">
                     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-                    Continuer avec Google
+                    <?php echo t('login_with_google'); ?>
                 </a>
                 <a href="face_login.php" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;background:#f0fdfa;color:#0f766e;border:1.5px solid #99f6e4;border-radius:12px;text-decoration:none;font-weight:700;font-size:.92rem;">
-                    &#128100; Se connecter avec Face ID
+                    &#128100; <?php echo t('login_with_face'); ?>
                 </a>
             </div>
         </div>
     </div>
+</div>
 </body>
 </html>

@@ -1,11 +1,14 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../partials/session.php';
+require_once __DIR__ . '/../lang.php';
 include '../../../Controller/CommandeController.php';
 include '../../../Controller/LigneCommandeController.php';
 include '../../../Controller/ProduitController.php';
+include '../../../Controller/FavoriteController.php';
 
 $prodCtrl = new ProduitController();
+$favCtrl = new FavoriteController();
 
 $stand_id = isset($_GET['stand_id']) ? (int)$_GET['stand_id'] : null;
 $parcours_id = isset($_GET['parcours_id']) ? (int)$_GET['parcours_id'] : null;
@@ -48,6 +51,9 @@ if (!$user) {
     exit;
 }
 $role = $user['role'] ?? 'visiteur';
+$userId = $user['id_user'] ?? $user['id'];
+$userFavorites = $favCtrl->getFavoritesByUser($userId);
+$favoriteIds = array_column($userFavorites, 'ID_produit');
 
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
@@ -56,6 +62,21 @@ if (!isset($_SESSION['cart'])) {
 $message = '';
 $success = '';
 $cart = &$_SESSION['cart'];
+
+// Normalisation du panier : s'assurer que chaque item a un nom et un prix
+// Utile si le produit a été ajouté depuis un autre stand ou via les favoris
+foreach ($cart as $id => &$item) {
+    if (!isset($item['nom']) || !isset($item['prix'])) {
+        $p = $prodCtrl->getProduit($id);
+        if ($p) {
+            $item['nom'] = $p['nom_produit'] ?? $p['Nom_produit'] ?? 'Inconnu';
+            $item['prix'] = $p['prix_produit'] ?? $p['Prix_produit'] ?? 0;
+        } else {
+            unset($cart[$id]);
+        }
+    }
+}
+unset($item);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle AI cart application
@@ -169,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $commandeC = new CommandeController();
                     $ligneC = new LigneCommandeController();
                     $userId = $user['id_user'] ?? $user['id'];
-                    $commande = new Commande(null, $userId, $stand_id, date('Y-m-d H:i:s'), 'paye', $total);
+                    $commande = new Commande(null, $userId, $stand_id, null, date('Y-m-d H:i:s'), 'paye', $total);
                     $newCommandeId = $commandeC->addCommande($commande);
 
                     if ($newCommandeId) {
@@ -210,19 +231,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = (int) $id;
             $qty = max(0, (int) $qty);
 
-            if ($qty > 0 && isset($products[$id])) {
-                $item = $products[$id];
-                if (!$item['en_out_stock'] || $item['qte_stock'] <= 0) {
-                    unset($cart[$id]);
-                    $message = "Le produit {$item['nom']} est en rupture de stock et a été retiré du panier.";
-                    continue;
+            if ($qty > 0) {
+                if (isset($cart[$id])) {
+                    // Si le produit est déjà dans le panier, on peut mettre à jour sa quantité
+                    // même s'il n'est pas dans le stand actuel ($products)
+                    $cart[$id]['quantite'] = $qty;
+                    
+                    // On vérifie quand même le stock si le produit est dans la liste du stand actuel
+                    if (isset($products[$id])) {
+                        $item = $products[$id];
+                        if ($qty > $item['qte_stock']) {
+                            $cart[$id]['quantite'] = $item['qte_stock'];
+                            $message = "Quantité limitée à {$item['qte_stock']} pour {$item['nom']}.";
+                        }
+                    }
                 }
-
-                if ($qty > $item['qte_stock']) {
-                    $qty = $item['qte_stock'];
-                    $message = "Quantité limitée à {$item['qte_stock']} pour {$item['nom']} en raison du stock disponible.";
-                }
-                $cart[$id]['quantite'] = $qty;
             } else {
                 unset($cart[$id]);
             }
@@ -417,8 +440,41 @@ foreach ($cart as $item) {
         @keyframes fadeOut { 0% { opacity:1; } 100% { opacity:0; display:none; } }
         .message.fade-out { animation: fadeOut .5s ease-in forwards; }
         
-        .btn-add-product { position: absolute; top: 30px; right: 30px; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; box-shadow: 0 4px 15px rgba(16,185,129,0.3); padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; transition: transform 0.2s, box-shadow 0.2s; z-index: 10; }
+        .btn-add-product {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 24px; background: linear-gradient(135deg,#0f766e,#14b8a6);
+            color: white; border-radius: 14px; font-weight: 700; text-decoration: none;
+            font-size: 0.95rem; transition: transform .15s, box-shadow .15s;
+            box-shadow: 0 5px 16px rgba(15,118,110,.22);
+        }
         .btn-add-product:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(16,185,129,0.4); }
+
+        .favorite-btn {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            z-index: 10;
+            background: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            color: #cbd5e1;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+        .favorite-btn:hover {
+            transform: scale(1.1);
+            color: #ef4444;
+        }
+        .favorite-btn.is-favorite {
+            color: #ef4444;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+        }
 
         /* AI Agent Styles */
         .ai-agent-section {
@@ -480,7 +536,11 @@ foreach ($cart as $item) {
     </style>
 </head>
 <body>
-<?php require __DIR__ . '/../partials/topbar.php'; ?>
+    <?php require __DIR__ . '/../partials/topbar.php'; ?>
+
+    <?php if ($role === 'participant'): ?>
+    <!-- Bouton favoris déplacé vers la section produits -->
+    <?php endif; ?>
 <div class="page">
     <a class="back-link" href="../detailParcours.php?id=<?php echo $parcours_id; ?>">← Retour au parcours</a>
 
@@ -538,18 +598,53 @@ foreach ($cart as $item) {
             </div>
         </div>
 
-        <!-- Debug section (hidden by default, can be shown for testing) -->
-        <div id="debugSection" style="display: none; margin-top: 20px; padding: 20px; background: rgba(255,255,255,0.8); border-radius: 12px; border: 1px solid #e2e8f0;">
-            <h3 style="color: var(--ink); margin-bottom: 15px;">🔍 Analyse des produits disponibles</h3>
-            <div id="debugContent" style="font-size: 0.85rem; color: #64748b;"></div>
-            <button id="toggleDebug" style="margin-top: 10px; padding: 8px 16px; background: #64748b; color: white; border: none; border-radius: 8px; cursor: pointer;">Masquer l'analyse</button>
+        <!-- Loader -->
+        <div id="aiLoader" style="display: none; text-align: center; margin-top: 20px; padding: 30px;">
+            <div style="display: inline-block; width: 50px; height: 50px; border: 5px solid rgba(15,118,110,0.2); border-radius: 50%; border-top-color: var(--teal); animation: spin 1s ease-in-out infinite;"></div>
+            <p style="color: var(--teal); font-weight: 700; margin-top: 15px;">L'IA Groq analyse les meilleurs produits pour votre marathon...</p>
         </div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
-        <div id="aiResult" style="display: none; background: white; border-radius: 16px; padding: 20px; margin-top: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(15,118,110,0.1);">
-            <h3 style="color: var(--ink); font-size: 1.2rem; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                <span>✅</span> Panier généré et appliqué automatiquement !
-            </h3>
-            <div id="aiCartSummary" style="color: #64748b; margin-bottom: 15px;"></div>
+        <div id="aiResult" style="display: none; background: white; border-radius: 16px; padding: 25px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid rgba(15,118,110,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;">
+                <h3 style="color: var(--ink); font-size: 1.4rem; margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">🏃‍♂️</span> Panier Intelligent Marathon
+                </h3>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.9rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Score Marathon</div>
+                    <div id="aiScore" style="font-size: 1.8rem; font-weight: 900; color: var(--teal);">9/10</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border-left: 4px solid var(--teal);">
+                    <div style="font-weight: 800; color: var(--ink); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-lightbulb" style="color:var(--sun)"></i> L'avis de l'Expert</div>
+                    <div id="aiExplanation" style="color: #475569; font-size: 0.95rem; line-height: 1.5;"></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="background: #fff7ed; padding: 15px; border-radius: 12px; border: 1px solid #ffedd5;">
+                        <div style="font-weight: 800; color: #ea580c; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-fire"></i> Énergie & Hydratation</div>
+                        <div id="aiCalories" style="color: #9a3412; font-size: 0.9rem; font-weight: 600;"></div>
+                    </div>
+                    <div style="background: #ecfdf5; padding: 15px; border-radius: 12px; border: 1px solid #d1fae5;">
+                        <div style="font-weight: 800; color: #059669; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;"><i class="fa-solid fa-apple-whole"></i> Conseil Nutrition</div>
+                        <div id="aiRecommendations" style="color: #065f46; font-size: 0.9rem; font-weight: 600;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="color: var(--ink); margin-bottom: 15px; font-size: 1.1rem; border-bottom: 1px dashed #e2e8f0; padding-bottom: 10px;">Votre sélection personnalisée :</h4>
+            <div id="aiCartSummary" style="margin-bottom: 25px;"></div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 15px; border-top: 2px solid #f1f5f9; padding-top: 20px;">
+                <div style="text-align: right; margin-right: 20px;">
+                    <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Total Estimé</div>
+                    <div id="aiTotal" style="font-size: 1.5rem; font-weight: 900; color: var(--ink);">0.00 TND</div>
+                </div>
+                <button id="applyAiCartBtn" style="background: linear-gradient(135deg, var(--teal), #0d665e); color: white; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(15,118,110,0.2);">
+                    🛒 Remplacer mon panier par cette sélection
+                </button>
+            </div>
         </div>
     </section>
 
@@ -563,7 +658,31 @@ foreach ($cart as $item) {
 
             <div class="grid">
                 <div>
-                    <h2 class="section-title-center">Produits Populaires</h2>
+                    <div style="position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 30px;">
+                        <h2 class="section-title-center" style="margin: 0;">Produits Populaires</h2>
+                        <?php if ($role === 'participant'): ?>
+                        <div style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; gap: 10px;">
+                            <button id="show-all-btn" onclick="showAllProducts()"
+                                   title="Tous les produits"
+                                   style="background: #6b7280; width: 55px; height: 55px;
+                                          border-radius: 50%; display: none;
+                                          align-items: center; justify-content: center;
+                                          box-shadow: 0 8px 20px rgba(107, 114, 128, 0.3);
+                                          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border: 3px solid white; text-decoration: none; cursor: pointer;">
+                                <i class="fa-solid fa-th" style="color: white; font-size: 20px;"></i>
+                            </button>
+                            <button id="floating-fav-btn" onclick="showFavorites()"
+                                   title="Mes Favoris"
+                                   style="background: #ff5e57; width: 55px; height: 55px;
+                                          border-radius: 50%; display: flex;
+                                          align-items: center; justify-content: center;
+                                          box-shadow: 0 8px 20px rgba(255, 94, 87, 0.3);
+                                          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border: 3px solid white; text-decoration: none; cursor: pointer;">
+                                <i class="fa-solid fa-heart" style="color: white; font-size: 24px;"></i>
+                            </button>
+                        </div>
+                        <?php endif; ?>
+                    </div>
                     <div class="product-grid">
                         <?php foreach ($products as $id => $product): ?>
                             <div class="product-card-item<?php echo $product['en_out_stock'] ? '' : ' out-of-stock'; ?>" data-product-id="<?php echo $id; ?>" data-product-available="<?php echo $product['en_out_stock']; ?>" onclick="addToCart(<?php echo $id; ?>)">
@@ -589,6 +708,14 @@ foreach ($cart as $item) {
                                     <div class="badge-round">DISPO</div>
                                 <?php else: ?>
                                     <div class="badge-round out">ÉPUISÉ</div>
+                                <?php endif; ?>
+
+                                <?php if ($role === 'participant'): ?>
+                                <button class="favorite-btn <?php echo in_array($id, $favoriteIds) ? 'is-favorite' : ''; ?>" 
+                                        onclick="toggleFavorite(event, <?php echo $id; ?>)" 
+                                        title="<?php echo in_array($id, $favoriteIds) ? 'Retirer des favoris' : 'Ajouter aux favoris'; ?>">
+                                    <i class="<?php echo in_array($id, $favoriteIds) ? 'fa-solid' : 'fa-regular'; ?> fa-heart"></i>
+                                </button>
                                 <?php endif; ?>
                                 
                                 <div class="product-img">
@@ -707,15 +834,16 @@ foreach ($cart as $item) {
             }
         });
 
-        // AI Agent functionality
+        // AI Agent functionality (Groq API)
         document.addEventListener('DOMContentLoaded', function () {
             const budgetInput = document.getElementById('budget');
             const personnesInput = document.getElementById('personnes');
             const generateBtn = document.getElementById('generateCartBtn');
+            const aiLoader = document.getElementById('aiLoader');
             const aiResult = document.getElementById('aiResult');
-            const aiCartSummary = document.getElementById('aiCartSummary');
+            const applyAiCartBtn = document.getElementById('applyAiCartBtn');
 
-            // Focus effects for inputs
+            // Focus effects
             [budgetInput, personnesInput].forEach(input => {
                 input.addEventListener('focus', function() {
                     this.style.borderColor = 'var(--teal)';
@@ -730,420 +858,107 @@ foreach ($cart as $item) {
             generateBtn.addEventListener('click', function() {
                 const budget = parseFloat(budgetInput.value);
                 const personnes = parseInt(personnesInput.value);
+                const standId = <?php echo $stand_id; ?>;
 
-                // Enhanced validation with helpful suggestions
                 if (!budget || budget <= 0) {
                     alert('Veuillez saisir un budget valide supérieur à 0 TND.');
                     budgetInput.focus();
                     return;
                 }
                 
-                if (!personnes || personnes <= 0 || personnes > 20) {
-                    alert('Veuillez saisir un nombre de personnes valide (1-20).');
+                if (!personnes || personnes <= 0 || personnes > 50) {
+                    alert('Veuillez saisir un nombre de personnes valide (1-50).');
                     personnesInput.focus();
                     return;
                 }
 
-                // Budget recommendations
-                const recommendedMinBudget = personnes * 5;
-                const recommendedMaxBudget = personnes * 25;
-                
-                if (budget < recommendedMinBudget) {
-                    if (!confirm(`Votre budget (${budget} TND) semble faible pour ${personnes} personne(s). Budget recommandé: ${recommendedMinBudget}-${recommendedMaxBudget} TND. Voulez-vous continuer ?`)) {
-                        return;
-                    }
-                } else if (budget > recommendedMaxBudget * 2) {
-                    if (!confirm(`Votre budget (${budget} TND) est élevé. Cela pourrait donner beaucoup de produits. Voulez-vous continuer ?`)) {
-                        return;
-                    }
-                }
-
-                // Visual feedback while generating
-                const originalText = generateBtn.textContent;
-                generateBtn.textContent = '🤔 Analyse des produits healthy...';
+                // UI Update
                 generateBtn.disabled = true;
                 generateBtn.style.opacity = '0.7';
+                aiResult.style.display = 'none';
+                aiLoader.style.display = 'block';
 
-                // Simulate processing time for better UX
-                setTimeout(() => {
-                    const aiCart = generateAICart(budget, personnes);
-                    
-                    if (Object.keys(aiCart).length === 0) {
-                        alert('Aucun produit healthy trouvé dans ce stand ou budget insuffisant. Essayez d\'augmenter votre budget.');
-                        generateBtn.textContent = originalText;
-                        generateBtn.disabled = false;
-                        generateBtn.style.opacity = '1';
-                        return;
-                    }
-                    
-                    displayAICart(aiCart);
-                    applyAICartToSession();
-                    
-                    // Reset button
-                    generateBtn.textContent = originalText;
+                fetch('generate_ai_cart_ajax.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ budget: budget, personnes: personnes, stand_id: standId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    aiLoader.style.display = 'none';
                     generateBtn.disabled = false;
                     generateBtn.style.opacity = '1';
-                }, 1000);
+
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    displayAICart(data);
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    aiLoader.style.display = 'none';
+                    generateBtn.disabled = false;
+                    generateBtn.style.opacity = '1';
+                    alert('Une erreur est survenue lors de la communication avec l\'IA.');
+                });
             });
 
-            function generateAICart(budget, personnes) {
-                // Get available products from PHP data
-                const products = <?php echo json_encode($products); ?>;
-                const availableProducts = Object.entries(products).filter(([id, product]) => 
-                    Number(product.en_out_stock) === 1 && Number(product.qte_stock) > 0
-                );
+            function displayAICart(data) {
+                document.getElementById('aiExplanation').textContent = data.explication || '';
+                document.getElementById('aiCalories').textContent = data.calories_estimees || '';
+                document.getElementById('aiRecommendations').textContent = data.recommandations || '';
+                
+                const score = data.score_marathon || 0;
+                const scoreColor = score >= 8 ? 'var(--teal)' : score >= 5 ? 'var(--sun)' : 'var(--coral)';
+                const scoreEl = document.getElementById('aiScore');
+                scoreEl.textContent = `${score}/10`;
+                scoreEl.style.color = scoreColor;
 
-                // Enhanced healthy product detection with scoring system
-                function getHealthyScore(product) {
-                    const name = product.nom.toLowerCase();
-                    const type = product.type.toLowerCase();
-                    let score = 0;
-                    
-                    // High priority healthy keywords (+10 points each)
-                    const highPriorityHealthy = ['eau', 'jus', 'fruit', 'légume', 'naturel', 'bio', 'healthy', 'fitness', 'energy', 'protéine', 'vitamine', 'minéral', 'antioxydant', 'thé', 'infusion'];
-                    highPriorityHealthy.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score += 10;
+                document.getElementById('aiTotal').textContent = `${(data.total || 0).toFixed(2)} TND`;
+
+                const summaryContainer = document.getElementById('aiCartSummary');
+                let html = '';
+
+                if (data.produits && data.produits.length > 0) {
+                    data.produits.forEach(item => {
+                        html += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(15,118,110,0.03); border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(15,118,110,0.08);">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: var(--ink); font-size: 1.05rem;">${item.nom}</div>
+                                <div style="color: #64748b; font-size: 0.85rem; font-style: italic; margin-top: 4px;">" ${item.raison} "</div>
+                            </div>
+                            <div style="text-align: right; margin-left: 20px;">
+                                <div style="color: var(--teal); font-weight: 800; font-size: 1.1rem;">${(item.quantite * item.prix).toFixed(2)} TND</div>
+                                <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; background: #e2e8f0; display: inline-block; padding: 2px 8px; border-radius: 10px; margin-top: 4px;">x${item.quantite}</div>
+                            </div>
+                        </div>`;
                     });
-                    
-                    // Medium priority healthy keywords (+5 points each)
-                    const mediumPriorityHealthy = ['boisson', 'smoothie', 'barre énergétique', 'noix', 'fruit sec', 'yaourt', 'compote', 'chocolat noir'];
-                    mediumPriorityHealthy.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score += 5;
-                    });
-                    
-                    // Low priority but acceptable (+2 points each)
-                    const lowPriorityAcceptable = ['céréale', 'muesli', 'granola'];
-                    lowPriorityAcceptable.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score += 2;
-                    });
-                    
-                    // Unhealthy keywords (negative points)
-                    const unhealthyKeywords = ['chocolat blanc', 'chocolat au lait', 'bonbon', 'sucrerie', 'gâteau', 'biscuit', 'chips', 'soda', 'alcool', 'frit', 'gras', 'sucre', 'monster', 'red bull', 'boisson énergétique'];
-                    unhealthyKeywords.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score -= 15;
-                    });
-                    
-                    // Medium unhealthy (-5 points)
-                    const mediumUnhealthy = ['cola', 'limonade', 'sirop'];
-                    mediumUnhealthy.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score -= 5;
-                    });
-                    
-                    // Price consideration (cheaper products get slight bonus for accessibility)
-                    if (product.prix <= 5) score += 2;
-                    
-                    return score;
+                } else {
+                    html = '<p style="color: var(--coral);">Aucun produit sélectionné.</p>';
                 }
 
-                // Filter and score products
-                const scoredProducts = availableProducts.map(([id, product]) => ({
-                    id,
-                    product,
-                    score: getHealthyScore(product)
-                })).filter(item => item.score >= 0) // Only keep non-negative scores
-                .sort((a, b) => b.score - a.score); // Sort by score descending
-
-                // If no healthy products found, use all available products but with lower priority
-                const baseProducts = scoredProducts.length > 0 ? scoredProducts : 
-                    availableProducts.map(([id, product]) => ({ id, product, score: 1 }))
-                    .sort((a, b) => a.product.prix - b.product.prix); // Sort by price ascending
-
-                function shuffleArray(array) {
-                    return array.slice().sort(() => Math.random() - 0.5);
-                }
-
-                const highScore = shuffleArray(baseProducts.filter(item => item.score >= 8));
-                const midScore = shuffleArray(baseProducts.filter(item => item.score >= 5 && item.score < 8));
-                const lowScore = shuffleArray(baseProducts.filter(item => item.score < 5));
-
-                const selection = [];
-                const hasDarkChocolate = product => product.nom.toLowerCase().includes('chocolat noir');
-                let darkChocolateAdded = false;
-
-                highScore.slice(0, 3).forEach(item => {
-                    if (hasDarkChocolate(item.product) && darkChocolateAdded) return;
-                    if (hasDarkChocolate(item.product)) darkChocolateAdded = true;
-                    selection.push(item);
-                });
-
-                midScore.slice(0, 2).forEach(item => {
-                    if (hasDarkChocolate(item.product) && darkChocolateAdded) return;
-                    if (hasDarkChocolate(item.product)) darkChocolateAdded = true;
-                    selection.push(item);
-                });
-
-                if (selection.length < 4 && lowScore.length > 0) {
-                    const lowPick = lowScore.find(item => !hasDarkChocolate(item.product));
-                    if (lowPick) {
-                        selection.push(lowPick);
-                    } else {
-                        selection.push(lowScore[0]);
-                    }
-                }
-
-                const selectedProducts = selection.length > 0 ? selection : baseProducts;
-
-                // Generate balanced cart with smart quantity limits
-                const cart = {};
-                let remainingBudget = budget;
-                const baseQuantity = Math.max(1, Math.ceil(personnes / 2));
-
-                // Smart quantity limits based on product type and persons
-                function getMaxQuantity(product, personnes, budget) {
-                    const name = product.nom.toLowerCase();
-                    const type = product.type.toLowerCase();
-                    const score = getHealthyScore(product);
-                    const isFullyHealthy = score >= 8; // 100% healthy threshold
-                    const budgetPerPerson = budget / personnes;
-                    
-                    // Base quantity = number of persons
-                    let baseQuantity = personnes;
-                    
-                    // Reduce quantity if budget is low (< 10 DT per person)
-                    if (budgetPerPerson < 10) {
-                        baseQuantity = Math.max(1, Math.floor(personnes * 0.7)); // 70% of persons
-                    }
-                    
-                    // Reduce quantity for non-100% healthy products
-                    if (!isFullyHealthy) {
-                        if (score >= 5) {
-                            baseQuantity = Math.max(1, Math.floor(personnes * 0.5)); // 50% of persons for medium healthy
-                        } else {
-                            baseQuantity = Math.max(1, Math.floor(personnes * 0.3)); // 30% of persons for low healthy
-                        }
-                    }
-                    
-                    // Special limits for specific product types
-                    if (name.includes('monster') || name.includes('red bull') || name.includes('boisson énergétique')) {
-                        return Math.min(product.qte_stock, Math.max(1, Math.floor(personnes / 4))); // Max 1 per 4 persons
-                    }
-                    
-                    // Supplements and vitamins: always limited
-                    if (name.includes('supplement') || name.includes('vitamine') || name.includes('protéine')) {
-                        return Math.min(product.qte_stock, Math.max(1, Math.floor(personnes / 2))); // Max 0.5 per person
-                    }
-                    
-                    // Nuts and dried fruits: sharing portions
-                    if (name.includes('noix') || name.includes('fruit sec')) {
-                        return Math.min(product.qte_stock, Math.max(1, Math.floor(personnes / 2))); // Max 0.5 per person
-                    }
-                    
-                    // Chocolate: sharing
-                    if (name.includes('chocolat')) {
-                        return Math.min(product.qte_stock, Math.max(1, Math.floor(personnes / 3))); // Max 1 per 3 persons
-                    }
-                    
-                    // Apply stock limit and ensure minimum 1
-                    return Math.min(product.qte_stock, Math.max(1, baseQuantity));
-                }
-
-                // Select products with balanced approach and diversity
-                const maxProducts = Math.min(selectedProducts.length, Math.min(6, Math.floor(budget / 3))); // Max 6 products, min 3 DT per product
-                
-                // Track categories to ensure diversity
-                const categoryCount = {
-                    drinks: 0,
-                    fruits: 0,
-                    snacks: 0,
-                    supplements: 0,
-                    other: 0
-                };
-                
-                function getCategory(product) {
-                    const name = product.nom.toLowerCase();
-                    const type = product.type.toLowerCase();
-                    
-                    if (name.includes('eau') || name.includes('jus') || name.includes('boisson') || type.includes('boisson')) return 'drinks';
-                    if (name.includes('fruit') || name.includes('banane') || name.includes('pomme') || name.includes('orange')) return 'fruits';
-                    if (name.includes('barre') || name.includes('snack') || name.includes('healthy') || name.includes('céréale') || name.includes('chocolat')) return 'snacks';
-                    if (name.includes('supplement') || name.includes('vitamine') || name.includes('protéine')) return 'supplements';
-                    return 'other';
-                }
-                
-                for (let i = 0; i < maxProducts && remainingBudget > 0; i++) {
-                    const { id, product, score } = selectedProducts[i];
-                    
-                    if (cart[id]) continue; // Skip if already in cart
-                    
-                    const category = getCategory(product);
-                    
-                    // Limit products per category to ensure diversity
-                    if (category !== 'other' && categoryCount[category] >= 2) continue;
-                    
-                    const maxQty = getMaxQuantity(product, personnes, budget);
-                    const affordableQty = Math.min(maxQty, Math.floor(remainingBudget / product.prix));
-                    
-                    if (affordableQty > 0) {
-                        // Main rule: quantity = number of persons, with exceptions
-                        let quantity = personnes; // Base quantity = number of persons
-                        
-                        // Exception 1: Reduce if budget is low (< 10 DT per person)
-                        const budgetPerPerson = budget / personnes;
-                        if (budgetPerPerson < 10) {
-                            quantity = Math.max(1, Math.floor(personnes * 0.7));
-                        }
-                        
-                        // Exception 2: Reduce if product is not 100% healthy
-                        if (score < 8) {
-                            if (score >= 5) {
-                                quantity = Math.max(1, Math.floor(personnes * 0.5)); // 50% for medium healthy
-                            } else {
-                                quantity = Math.max(1, Math.floor(personnes * 0.3)); // 30% for low healthy
-                            }
-                        }
-                        
-                        // Apply stock and affordability limits
-                        quantity = Math.min(quantity, maxQty, affordableQty);
-                        quantity = Math.max(1, quantity); // Minimum 1
-                        
-                        const cost = quantity * product.prix;
-                        
-                        if (cost <= remainingBudget && cost >= 1) {
-                            cart[id] = {
-                                idproduit: id,
-                                nom: product.nom,
-                                prix: product.prix,
-                                quantite: quantity,
-                                type: product.type,
-                                score: score,
-                                category: category
-                            };
-                            remainingBudget -= cost;
-                            categoryCount[category]++;
-                        }
-                    }
-                }
-
-                // If budget still has significant amount left (>15 DT) and we have less than 4 products, add more variety
-                if (remainingBudget > 15 && Object.keys(cart).length < 4) {
-                    const remainingProducts = selectedProducts.filter(({ id }) => !cart[id])
-                        .filter(({ product }) => product.prix <= remainingBudget / 2)
-                        .sort((a, b) => b.score - a.score) // Sort by score first
-                        .slice(0, 3); // Take top 3 remaining products
-                    
-                    for (const { id, product } of remainingProducts) {
-                        const category = getCategory(product);
-                        
-                        // Skip if we already have 2+ products in this category
-                        if (category !== 'other' && categoryCount[category] >= 2) continue;
-                        
-                        const maxQty = getMaxQuantity(product, personnes, budget);
-                        
-                        // Same logic: quantity = number of persons with exceptions
-                        let quantity = personnes;
-                        const budgetPerPerson = budget / personnes;
-                        const score = getHealthyScore(product);
-                        
-                        if (budgetPerPerson < 10) {
-                            quantity = Math.max(1, Math.floor(personnes * 0.7));
-                        }
-                        
-                        if (score < 8) {
-                            quantity = score >= 5 ? Math.max(1, Math.floor(personnes * 0.5)) : Math.max(1, Math.floor(personnes * 0.3));
-                        }
-                        
-                        quantity = Math.min(quantity, maxQty, Math.floor(remainingBudget / product.prix));
-                        quantity = Math.max(1, quantity);
-                        const cost = quantity * product.prix;
-                        
-                        if (cost <= remainingBudget && quantity > 0 && cost >= 2) { // Minimum 2 DT for additional items
-                            cart[id] = {
-                                idproduit: id,
-                                nom: product.nom,
-                                prix: product.prix,
-                                quantite: quantity,
-                                type: product.type,
-                                score: getHealthyScore(product),
-                                category: category
-                            };
-                            remainingBudget -= cost;
-                            categoryCount[category]++;
-                        }
-                    }
-                }
-
-                return cart;
-            }
-
-            function displayAICart(cart) {
-                const total = Object.values(cart).reduce((sum, item) => sum + (item.quantite * item.prix), 0);
-                const itemCount = Object.values(cart).reduce((sum, item) => sum + item.quantite, 0);
-                const avgHealthScore = Object.values(cart).reduce((sum, item) => sum + (item.score || 1), 0) / Object.keys(cart).length;
-                
-                let summary = `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">`;
-                summary += `<div><strong>${Object.keys(cart).length}</strong> produits healthy</div>`;
-                summary += `<div><strong>${itemCount}</strong> articles au total</div>`;
-                summary += `<div><strong>${total.toFixed(2)} TND</strong> sur ${budgetInput.value} TND</div>`;
-                summary += `<div><strong>Score santé: ${avgHealthScore.toFixed(1)}/10</strong></div>`;
-                summary += `</div>`;
-
-                summary += `<div style="border-top: 1px solid #e2e8f0; padding-top: 15px;">`;
-                summary += `<div style="margin-bottom: 10px; font-size: 0.9rem; color: #64748b;">`;
-                summary += `<strong>🤖 Logique de l'IA:</strong> Quantité = nombre de personnes (${personnesInput.value}) pour produits 100% healthy. Réduction pour budget faible ou produits moins healthy. Boissons énergétiques limitées, chocolat noir en partage.`;
-                summary += `</div>`;
-                
-                // Group by category for better display
-                const categorizedItems = {};
-                Object.values(cart).forEach(item => {
-                    const category = item.category || 'other';
-                    if (!categorizedItems[category]) categorizedItems[category] = [];
-                    categorizedItems[category].push(item);
-                });
-                
-                Object.entries(categorizedItems).forEach(([category, items]) => {
-                    const categoryNames = {
-                        drinks: '🥤 Boissons',
-                        fruits: '🍎 Fruits',
-                        snacks: '🍫 Snacks',
-                        supplements: '💊 Suppléments',
-                        other: '📦 Autres'
-                    };
-                    
-                    summary += `<div style="margin-bottom: 15px;">`;
-                    summary += `<div style="font-size: 0.8rem; color: var(--teal); font-weight: 700; margin-bottom: 5px; text-transform: uppercase;">${categoryNames[category] || category}</div>`;
-                    
-                    items.forEach(item => {
-                        const healthIndicator = item.score >= 8 ? '🟢' : item.score >= 5 ? '🟡' : '🟠';
-                        summary += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 6px; background: rgba(15,118,110,0.05); border-radius: 6px; font-size: 0.85rem;">`;
-                        summary += `<div style="flex: 1;">`;
-                        summary += `<span style="font-weight: 600;">${item.nom}</span>`;
-                        summary += `<span style="color: #64748b; margin-left: 6px;">${healthIndicator} ${item.score}/10</span>`;
-                        summary += `</div>`;
-                        summary += `<div style="text-align: right;">`;
-                        summary += `<span style="color: var(--teal); font-weight: 600;">${(item.quantite * item.prix).toFixed(2)} TND</span>`;
-                        summary += `<br><span style="color: #64748b; font-size: 0.75rem;">(x${item.quantite})</span>`;
-                        summary += `</div>`;
-                        summary += `</div>`;
-                    });
-                    
-                    summary += `</div>`;
-                });
-                
-                summary += `</div>`;
-
-                aiCartSummary.innerHTML = summary;
+                summaryContainer.innerHTML = html;
                 aiResult.style.display = 'block';
-                
-                // Store cart for later application
-                window.aiGeneratedCart = cart;
+
+                // Save data for apply button
+                window.aiGeneratedCartData = data.produits;
             }
 
-            function applyAICartToSession() {
-                if (!window.aiGeneratedCart) return;
+            applyAiCartBtn.addEventListener('click', function() {
+                if (!window.aiGeneratedCartData || window.aiGeneratedCartData.length === 0) return;
 
-                // Create form to add all AI cart items at once
                 const form = document.createElement('form');
                 form.method = 'post';
                 form.style.display = 'none';
 
-                // Add clear cart action
-                const clearInput = document.createElement('input');
-                clearInput.name = 'clear_cart';
-                clearInput.value = '1';
-                form.appendChild(clearInput);
+                const applyInput = document.createElement('input');
+                applyInput.name = 'apply_ai_cart';
+                applyInput.value = '1';
+                form.appendChild(applyInput);
 
-                // Add AI cart items
-                Object.values(window.aiGeneratedCart).forEach((item, index) => {
+                window.aiGeneratedCartData.forEach((item, index) => {
                     const idInput = document.createElement('input');
                     idInput.name = `ai_product_id[${index}]`;
                     idInput.value = item.idproduit;
@@ -1155,116 +970,103 @@ foreach ($cart as $item) {
                     form.appendChild(qtyInput);
                 });
 
-                // Add apply AI cart flag
-                const applyInput = document.createElement('input');
-                applyInput.name = 'apply_ai_cart';
-                applyInput.value = '1';
-                form.appendChild(applyInput);
-
                 document.body.appendChild(form);
                 form.submit();
-            }
-
-            // Debug functionality
-            let debugVisible = false;
-            const debugSection = document.getElementById('debugSection');
-            const debugContent = document.getElementById('debugContent');
-            const toggleDebug = document.getElementById('toggleDebug');
-
-            // Add debug button to the form
-            const debugBtn = document.createElement('button');
-            debugBtn.id = 'showDebugBtn';
-            debugBtn.textContent = '🔍 Voir analyse IA';
-            debugBtn.style.cssText = 'background: #64748b; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-left: 10px; font-size: 0.8rem;';
-            generateBtn.parentNode.appendChild(debugBtn);
-
-            debugBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (!debugVisible) {
-                    showProductAnalysis();
-                    debugSection.style.display = 'block';
-                    debugBtn.textContent = '🔍 Masquer analyse';
-                    debugVisible = true;
-                } else {
-                    debugSection.style.display = 'none';
-                    debugBtn.textContent = '🔍 Voir analyse IA';
-                    debugVisible = false;
-                }
             });
-
-            toggleDebug.addEventListener('click', function() {
-                debugSection.style.display = 'none';
-                debugBtn.textContent = '🔍 Voir analyse IA';
-                debugVisible = false;
-            });
-
-            function showProductAnalysis() {
-                const products = <?php echo json_encode($products); ?>;
-                const availableProducts = Object.entries(products).filter(([id, product]) => 
-                    Number(product.en_out_stock) === 1 && Number(product.qte_stock) > 0
-                );
-
-                function getHealthyScore(product) {
-                    const name = product.nom.toLowerCase();
-                    const type = product.type.toLowerCase();
-                    let score = 0;
-                    
-                    const highPriorityHealthy = ['eau', 'jus', 'fruit', 'légume', 'naturel', 'bio', 'healthy', 'fitness', 'energy', 'protéine', 'vitamine', 'minéral', 'antioxydant', 'thé', 'infusion'];
-                    highPriorityHealthy.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score += 10;
-                    });
-                    
-                    const mediumPriorityHealthy = ['boisson', 'smoothie', 'barre énergétique', 'noix', 'fruit sec', 'yaourt', 'compote', 'chocolat noir'];
-                    mediumPriorityHealthy.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score += 5;
-                    });
-                    
-                    const lowPriorityAcceptable = ['céréale', 'muesli', 'granola'];
-                    lowPriorityAcceptable.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score += 2;
-                    });
-                    
-                    const unhealthyKeywords = ['chocolat blanc', 'chocolat au lait', 'bonbon', 'sucrerie', 'gâteau', 'biscuit', 'chips', 'soda', 'alcool', 'frit', 'gras', 'sucre', 'monster', 'red bull', 'boisson énergétique'];
-                    unhealthyKeywords.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score -= 15;
-                    });
-                    
-                    const mediumUnhealthy = ['cola', 'limonade', 'sirop'];
-                    mediumUnhealthy.forEach(keyword => {
-                        if (name.includes(keyword) || type.includes(keyword)) score -= 5;
-                    });
-                    
-                    if (product.prix <= 5) score += 2;
-                    
-                    return score;
-                }
-
-                let content = `<div style="max-height: 300px; overflow-y: auto;">`;
-                content += `<table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">`;
-                content += `<thead><tr style="background: #f8fafc;"><th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left;">Produit</th><th style="padding: 8px; border: 1px solid #e2e8f0;">Prix</th><th style="padding: 8px; border: 1px solid #e2e8f0;">Stock</th><th style="padding: 8px; border: 1px solid #e2e8f0;">Score Santé</th><th style="padding: 8px; border: 1px solid #e2e8f0;">Évaluation</th></tr></thead>`;
-                content += `<tbody>`;
-
-                availableProducts.forEach(([id, product]) => {
-                    const score = getHealthyScore(product);
-                    const evaluation = score >= 8 ? '🟢 Excellent' : score >= 5 ? '🟡 Bon' : score >= 0 ? '🟠 Moyen' : '🔴 Non healthy';
-                    const rowStyle = score >= 8 ? 'background: rgba(16,185,129,0.1);' : score >= 5 ? 'background: rgba(245,158,11,0.1);' : score >= 0 ? 'background: rgba(249,115,22,0.1);' : 'background: rgba(239,68,68,0.1);';
-                    
-                    content += `<tr style="${rowStyle}">`;
-                    content += `<td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">${product.nom}</td>`;
-                    content += `<td style="padding: 8px; border: 1px solid #e2e8f0;">${product.prix} TND</td>`;
-                    content += `<td style="padding: 8px; border: 1px solid #e2e8f0;">${product.qte_stock}</td>`;
-                    content += `<td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: 600;">${score}/10</td>`;
-                    content += `<td style="padding: 8px; border: 1px solid #e2e8f0;">${evaluation}</td>`;
-                    content += `</tr>`;
-                });
-
-                content += `</tbody></table>`;
-                content += `<p style="margin-top: 10px; font-size: 0.8rem;"><strong>💡 Conseils:</strong> L'IA privilégie les produits avec score ≥5. Les produits avec score négatif sont exclus. Un score élevé indique un produit très healthy.</p>`;
-                content += `</div>`;
-
-                debugContent.innerHTML = content;
-            }
         });
+        function toggleFavorite(event, productId) {
+            event.stopPropagation();
+            const btn = event.currentTarget;
+            const icon = btn.querySelector('i');
+            
+            const formData = new FormData();
+            formData.append('id_produit', productId);
+            formData.append('action', 'toggle');
+
+            fetch('toggleFavoriteAjax.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                if (data === 'added') {
+                    btn.classList.add('is-favorite');
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid');
+                    btn.title = 'Retirer des favoris';
+                    
+                    // Afficher le bouton flottant s'il existe
+                    const floatBtn = document.getElementById('floating-fav-btn');
+                    if (floatBtn) {
+                        floatBtn.style.display = 'flex';
+                        floatBtn.style.transform = 'translateY(-50%) scale(1.2)';
+                        setTimeout(() => floatBtn.style.transform = 'translateY(-50%) scale(1)', 200);
+                    }
+                } else if (data === 'removed') {
+                    btn.classList.remove('is-favorite');
+                    icon.classList.remove('fa-solid');
+                    icon.classList.add('fa-regular');
+                    btn.title = 'Ajouter aux favoris';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function showFavorites() {
+            // Récupérer les favoris actuels via AJAX
+            fetch('getFavoritesAjax.php')
+                .then(response => response.json())
+                .then(favoriteIds => {
+                    console.log('Favorite IDs from AJAX:', favoriteIds);
+                    
+                    const productCards = document.querySelectorAll('.product-card-item');
+                    console.log('Found product cards:', productCards.length);
+                    
+                    productCards.forEach(card => {
+                        const productId = parseInt(card.dataset.productId);
+                        console.log('Checking product ID:', productId, 'Is favorite:', favoriteIds.includes(productId));
+                        
+                        if (favoriteIds.includes(productId)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                    
+                    // Mettre à jour le titre
+                    const title = document.querySelector('.section-title-center');
+                    if (title) {
+                        title.textContent = 'Mes Favoris';
+                    }
+                    
+                    // Mettre à jour les boutons
+                    const showAllBtn = document.getElementById('show-all-btn');
+                    if (showAllBtn) showAllBtn.style.display = 'flex';
+                })
+                .catch(error => {
+                    console.error('Error fetching favorites:', error);
+                });
+        }
+
+        function showAllProducts() {
+            const productCards = document.querySelectorAll('.product-card-item');
+            
+            productCards.forEach(card => {
+                card.style.display = 'block';
+            });
+            
+            // Mettre à jour le titre
+            const title = document.querySelector('.section-title-center');
+            if (title) {
+                title.textContent = 'Produits Populaires';
+            }
+            
+            // Mettre à jour les boutons
+            const showAllBtn = document.getElementById('show-all-btn');
+            const favBtn = document.getElementById('floating-fav-btn');
+            if (showAllBtn) showAllBtn.style.display = 'none';
+            if (favBtn) favBtn.style.display = 'flex';
+        }
     </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/../../Controller/ParcoursController.php';
 
 $controller = new ParcoursController();
@@ -16,7 +17,7 @@ $role = $user['role'] ?? 'visiteur';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Parcours — BarchaThon</title>
+    <title><?php echo t('parcours_title'); ?> — BarchaThon</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root { --ink:#102a43; --teal:#0f766e; --sun:#ffb703; --coral:#e76f51; }
@@ -94,7 +95,7 @@ $role = $user['role'] ?? 'visiteur';
 
     <section class="hero-strip">
         <div class="hero-card">
-            <h1>Parcours de Course</h1>
+            <h1><?php echo t('parcours_title'); ?></h1>
             <p>Découvrez tous les tracés disponibles par niveau de difficulté.</p>
         </div>
         <div class="hero-stats">

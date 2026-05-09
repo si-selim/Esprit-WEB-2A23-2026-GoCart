@@ -1,5 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/../../Controller/UserController.php';
 
 $error = '';
@@ -11,7 +13,7 @@ $ctrl = new UserController();
 $user = $token ? $ctrl->findByResetToken($token) : false;
 
 if (!$token || !$user) {
-    $error = 'Lien invalide ou expire. Veuillez faire une nouvelle demande.';
+    $error = t('reset_invalid_token');
 }
 
 if (!$error && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -19,22 +21,23 @@ if (!$error && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $pwd2 = $_POST['password_confirm'] ?? '';
 
     if (strlen($pwd) < 8) {
-        $error = 'Le mot de passe doit contenir au moins 8 caracteres.';
+        $error = t('err_password_min');
     } elseif ($pwd !== $pwd2) {
-        $error = 'Les deux mots de passe ne correspondent pas.';
+        $error = t('reset_mismatch');
     } else {
         $hash = password_hash($pwd, PASSWORD_DEFAULT);
         $ctrl->resetPassword($user['id_user'], $hash);
-        $success = 'Votre mot de passe a ete reinitialise avec succes. Vous pouvez maintenant vous connecter.';
+        $success = t('reset_done');
     }
 }
+$currentPage = 'reset';
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?php echo current_lang(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reinitialiser le mot de passe</title>
+    <title><?php echo t('reset_title'); ?></title>
     <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');</script>
     <style>
         html[data-theme="dark"] body { background:#0f172a !important; }
@@ -52,8 +55,9 @@ if (!$error && $_SERVER['REQUEST_METHOD'] === 'POST') {
         body {
             font-family:"Segoe UI",sans-serif; color:var(--ink);
             background:linear-gradient(180deg,#fefaf0,var(--bg));
-            min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+            min-height:100vh; display:flex; flex-direction:column;
         }
+        .auth-shell { flex:1; display:flex; align-items:center; justify-content:center; padding:30px 20px; }
         .page-narrow { width:100%; max-width:460px; }
         .card-form {
             background:#fff; border-radius:24px; padding:40px 36px;
@@ -86,10 +90,12 @@ if (!$error && $_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
+<?php require __DIR__ . '/partials/topbar.php'; ?>
+<div class="auth-shell">
     <div class="page-narrow">
         <div class="card-form fade-in">
-            <h1>Nouveau mot de passe</h1>
-            <p>Choisissez un nouveau mot de passe pour votre compte BarchaThon.</p>
+            <h1><?php echo t('reset_title'); ?></h1>
+            <p><?php echo t('reset_subtitle'); ?></p>
 
             <?php if ($error): ?>
                 <div class="error-msg">&#9888;&#65039; <?php echo htmlspecialchars($error); ?></div>
@@ -102,29 +108,30 @@ if (!$error && $_SERVER['REQUEST_METHOD'] === 'POST') {
             <form method="POST" action="reset_password.php">
                 <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
                 <div class="field-mb">
-                    <label for="password">Nouveau mot de passe (8 caracteres minimum)</label>
-                    <input id="password" name="password" type="password" placeholder="Nouveau mot de passe" required minlength="8">
+                    <label for="password"><?php echo t('reset_new_pass'); ?></label>
+                    <input id="password" name="password" type="password" placeholder="<?php echo htmlspecialchars(t('reset_new_pass')); ?>" required minlength="8">
                 </div>
                 <div class="field-mb">
-                    <label for="password_confirm">Confirmer le mot de passe</label>
-                    <input id="password_confirm" name="password_confirm" type="password" placeholder="Confirmer" required minlength="8">
+                    <label for="password_confirm"><?php echo t('reset_confirm'); ?></label>
+                    <input id="password_confirm" name="password_confirm" type="password" placeholder="<?php echo htmlspecialchars(t('reset_confirm')); ?>" required minlength="8">
                 </div>
                 <div class="actions">
-                    <button class="btn btn-primary" type="submit">Reinitialiser</button>
-                    <a class="btn btn-secondary" href="login.php">Annuler</a>
+                    <button class="btn btn-primary" type="submit"><?php echo t('reset_submit'); ?></button>
+                    <a class="btn btn-secondary" href="login.php"><?php echo t('detail_cancel'); ?></a>
                 </div>
             </form>
             <?php elseif ($error): ?>
                 <div class="actions">
-                    <a class="btn btn-primary" href="forgot_password.php">Nouvelle demande</a>
-                    <a class="btn btn-secondary" href="login.php">Retour</a>
+                    <a class="btn btn-primary" href="forgot_password.php"><?php echo t('forgot_submit'); ?></a>
+                    <a class="btn btn-secondary" href="login.php"><?php echo t('login_back'); ?></a>
                 </div>
             <?php else: ?>
                 <div class="actions">
-                    <a class="btn btn-primary" href="login.php">Se connecter</a>
+                    <a class="btn btn-primary" href="login.php"><?php echo t('nav_login'); ?></a>
                 </div>
             <?php endif; ?>
         </div>
     </div>
+</div>
 </body>
 </html>

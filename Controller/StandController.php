@@ -198,13 +198,59 @@ class StandController {
     
     private function geocode($address) {
         if (empty($address)) return [36.8065, 10.1815];
-        $localCache = [
-            'ariana' => [36.8625, 10.1956], 'menzah' => [36.8465, 10.1706],
-            'nasser' => [36.8580, 10.1600], 'medina' => [36.7992, 10.1706],
-            'zaghouan' => [36.4022, 10.1425], 'lac' => [36.8333, 10.2333], 'marsa' => [36.8778, 10.3222]
-        ];
+        
         $addrClean = strtolower(trim($address));
-        foreach ($localCache as $key => $coords) { if (strpos($addrClean, $key) !== false) return $coords; }
+        
+        // 1. Cache local étendu pour les lieux fréquents du projet (Zaghouan et Tunis)
+        $localCache = [
+            'ariana'      => [36.8625, 10.1956],
+            'menzah'      => [36.8465, 10.1706],
+            'manzah'      => [36.8465, 10.1706],
+            'nasser'      => [36.8580, 10.1600],
+            'medina'      => [36.7992, 10.1706],
+            'zaghouan'    => [36.4022, 10.1425],
+            'lac'         => [36.8333, 10.2333],
+            'marsa'       => [36.8778, 10.3222],
+            'oued ellil'  => [36.8427, 10.0388],
+            'oued el lil' => [36.8427, 10.0388],
+            'oued lil'    => [36.8427, 10.0388],
+            'manouba'     => [36.8078, 10.0864],
+            'sidi thabet' => [36.9100, 10.0400],
+            'sid thabet'  => [36.9100, 10.0400],
+            'raoued'      => [36.9139, 10.1825],
+            'tunis'       => [36.8065, 10.1815],
+            'mourouj'     => [36.7261, 10.2111],
+            'el mourouj'  => [36.7261, 10.2111],
+            'ben arous'   => [36.7531, 10.2222],
+            'bardo'       => [36.8092, 10.1411]
+        ];
+
+        foreach ($localCache as $key => $coords) {
+            if (strpos($addrClean, $key) !== false) return $coords;
+        }
+
+        // 2. Fallback vers API Nominatim si non trouvé en cache
+        try {
+            $url = "https://nominatim.openstreetmap.org/search?q=" . urlencode($address . ", Tunisie") . "&format=json&limit=1";
+            $opts = [
+                "http" => [
+                    "method" => "GET",
+                    "header" => "User-Agent: BarchaThon-App/1.0\r\n"
+                ]
+            ];
+            $context = stream_context_create($opts);
+            $response = @file_get_contents($url, false, $context);
+            if ($response) {
+                $data = json_decode($response, true);
+                if (!empty($data) && isset($data[0]['lat'])) {
+                    return [(float)$data[0]['lat'], (float)$data[0]['lon']];
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Geocoding error for $address: " . $e->getMessage());
+        }
+
+        // 3. Dernier recours : Centre de Tunis
         return [36.8065, 10.1815];
     }
 
@@ -290,5 +336,15 @@ class StandController {
         }
         usort($results, function($a, $b) { return $a['distance_km'] <=> $b['distance_km']; });
         return $results;
+    }
+
+    public function getStandsWithCoords() {
+        $allStands = $this->listStands();
+        foreach ($allStands as &$stand) {
+            list($lat, $lon) = $this->geocode($stand['position']);
+            $stand['lat'] = $lat;
+            $stand['lon'] = $lon;
+        }
+        return $allStands;
     }
 }

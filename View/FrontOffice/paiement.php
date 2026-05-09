@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 
 $user = getCurrentUser();
 if (!$user) {
@@ -26,7 +27,7 @@ $currentPage = 'paiement';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paiement — BarchaThon</title>
+    <title><?php echo t('pay_title'); ?> — BarchaThon</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://js.stripe.com/v3/"></script>
     <style>
@@ -57,6 +58,8 @@ $currentPage = 'paiement';
         .payment-form { margin-top:32px; text-align:center; }
         .btn-pay { background:linear-gradient(135deg,var(--teal),#14b8a6); color:white; border:none; border-radius:12px; padding:16px 32px; font-size:1.1rem; font-weight:700; cursor:pointer; transition:transform .15s; }
         .btn-pay:hover { transform:translateY(-2px); }
+        .btn-secondary { background:#e2e8f0; color:#102a43; border:1px solid #cbd5e1; border-radius:12px; padding:16px 24px; font-size:1rem; font-weight:700; cursor:pointer; transition:transform .15s, background-color .15s; }
+        .btn-secondary:hover { background:#cbd5e1; transform:translateY(-2px); }
 
         .message { padding:16px; border-radius:18px; margin-bottom:18px; }
         .message.success { background:#dcfce7; color:#166534; border:1px solid #86efac; }
@@ -133,7 +136,7 @@ $currentPage = 'paiement';
 
     <div class="payment-container">
         <div class="payment-header">
-            <h1>💳 Paiement sécurisé</h1>
+            <h1>💳 <?php echo t('pay_title'); ?></h1>
             <p><?php echo $type === 'marathon' ? 'Finalisez votre inscription au marathon' : 'Payez votre commande'; ?></p>
         </div>
 
@@ -154,7 +157,8 @@ $currentPage = 'paiement';
             <input type="hidden" name="montant" value="<?php echo $montant; ?>">
             <input type="hidden" name="parcours_id" value="<?php echo $parcours_id; ?>">
             <input type="hidden" name="stand_id" value="<?php echo $stand_id; ?>">
-            <input type="hidden" name="methode_paiement" id="selectedMethod" required>
+            <input type="hidden" name="action" id="paymentAction" value="now">
+            <input type="hidden" name="methode_paiement" id="selectedMethod">
             <input type="hidden" name="payment_method_id" id="paymentMethodId">
 
             <div class="payment-methods">
@@ -196,8 +200,13 @@ $currentPage = 'paiement';
                 <small>Entrez l'adresse email liée à votre compte PayPal.</small>
             </div>
 
-            <div style="margin-top:32px;">
-                <button type="submit" class="btn-pay" id="payBtn" disabled>
+            <div style="margin-top:32px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:center;">
+                <?php if ($type === 'commande'): ?>
+                    <button type="button" class="btn btn-secondary" id="payLaterBtn">
+                        Payer ultérieurement
+                    </button>
+                <?php endif; ?>
+                <button type="submit" class="btn-pay" id="payBtn">
                     <span class="loading-spinner" id="spinner"><i class="fas fa-spinner fa-spin"></i></span>
                     <i class="fas fa-lock"></i> Payer maintenant
                 </button>
@@ -226,7 +235,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const methods = document.querySelectorAll('.payment-method');
     const selectedInput = document.getElementById('selectedMethod');
+    const paymentActionInput = document.getElementById('paymentAction');
     const payBtn = document.getElementById('payBtn');
+    const payLaterBtn = document.getElementById('payLaterBtn');
     const paymentForm = document.getElementById('paymentForm');
     const stripeForm = document.getElementById('stripeForm');
     const d17Details = document.getElementById('d17Details');
@@ -237,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const spinner = document.getElementById('spinner');
     
     let selectedMethod = null;
+    let paymentAction = 'now';
 
     // Initialiser Stripe Card Element
     cardElement.mount('#stripe-card-element');
@@ -257,6 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedMethod = this.dataset.method;
             selectedInput.value = selectedMethod;
             payBtn.disabled = false;
+            paymentActionInput.value = 'now';
             
             // Afficher/masquer le formulaire Stripe et les champs spécifiques
             stripeForm.classList.toggle('active', selectedMethod === 'stripe');
@@ -269,8 +282,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const isValidEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const isValidD17 = value => /^[A-Za-z0-9\-]{5,30}$/.test(value.trim());
 
+    if (payLaterBtn) {
+        payLaterBtn.addEventListener('click', function() {
+            paymentAction = 'later';
+            paymentActionInput.value = 'later';
+            selectedInput.value = '';
+            paymentForm.submit();
+        });
+    }
+
     // Gérer la soumission du formulaire
     paymentForm.addEventListener('submit', async function(e) {
+        if (paymentAction === 'later') {
+            paymentActionInput.value = 'later';
+            return;
+        }
         e.preventDefault();
 
         if (!selectedMethod) {
@@ -304,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
         payBtn.disabled = true;
         spinner.classList.add('show');
         selectedInput.value = selectedMethod;
+        paymentActionInput.value = 'now';
         
         if (selectedMethod === 'stripe') {
             try {

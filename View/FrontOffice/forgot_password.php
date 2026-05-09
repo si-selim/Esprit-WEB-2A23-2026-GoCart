@@ -1,5 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/../../Controller/UserController.php';
 require_once __DIR__ . '/../../Controller/Mailer.php';
 
@@ -9,13 +11,13 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Veuillez saisir une adresse email valide.';
+        $error = t('err_email_invalid');
     } else {
         $ctrl = new UserController();
         $token = $ctrl->createPasswordResetToken($email);
 
         // Always show the same success message (do not leak which emails exist)
-        $genericMsg = 'Si un compte existe avec cette adresse, un email de reinitialisation vous a ete envoye.';
+        $genericMsg = t('forgot_sent');
 
         if ($token) {
             $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
@@ -38,13 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $success = $genericMsg;
     }
 }
+$currentPage = 'forgot';
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?php echo current_lang(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mot de passe oublie</title>
+    <title><?php echo t('forgot_title'); ?></title>
     <script>document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'light');</script>
     <style>
         html[data-theme="dark"] body { background:#0f172a !important; }
@@ -62,8 +65,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         body {
             font-family:"Segoe UI",sans-serif; color:var(--ink);
             background:linear-gradient(180deg,#fefaf0,var(--bg));
-            min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+            min-height:100vh; display:flex; flex-direction:column;
         }
+        .auth-shell { flex:1; display:flex; align-items:center; justify-content:center; padding:30px 20px; }
         .page-narrow { width:100%; max-width:460px; }
         .card-form {
             background:#fff; border-radius:24px; padding:40px 36px;
@@ -96,10 +100,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
+<?php require __DIR__ . '/partials/topbar.php'; ?>
+<div class="auth-shell">
     <div class="page-narrow">
         <div class="card-form fade-in">
-            <h1>Mot de passe oublie ?</h1>
-            <p>Saisissez votre adresse email. Si un compte existe, vous recevrez un lien pour reinitialiser votre mot de passe.</p>
+            <h1><?php echo t('forgot_title'); ?></h1>
+            <p><?php echo t('forgot_subtitle'); ?></p>
 
             <?php if ($error): ?>
                 <div class="error-msg">&#9888;&#65039; <?php echo htmlspecialchars($error); ?></div>
@@ -111,20 +117,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php if (!$success): ?>
             <form method="POST" action="forgot_password.php">
                 <div class="field-mb">
-                    <label for="email">Adresse email</label>
+                    <label for="email"><?php echo t('forgot_email'); ?></label>
                     <input id="email" name="email" type="email" placeholder="vous@exemple.com" required value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
                 </div>
                 <div class="actions">
-                    <button class="btn btn-primary" type="submit">Envoyer le lien</button>
-                    <a class="btn btn-secondary" href="login.php">Retour</a>
+                    <button class="btn btn-primary" type="submit"><?php echo t('forgot_submit'); ?></button>
+                    <a class="btn btn-secondary" href="login.php"><?php echo t('login_back'); ?></a>
                 </div>
             </form>
             <?php else: ?>
                 <div class="actions">
-                    <a class="btn btn-primary" href="login.php">Retour a la connexion</a>
+                    <a class="btn btn-primary" href="login.php"><?php echo t('forgot_back'); ?></a>
                 </div>
             <?php endif; ?>
         </div>
     </div>
+</div>
 </body>
 </html>

@@ -3,6 +3,7 @@ class Commande {
     private ?int $idcommande;
     private ?int $idutilisateur;
     private ?int $idstand;
+    private ?int $idorganisateur;
     private ?string $datecommande;
     private ?string $statut;
     private ?float $montanttotal;
@@ -13,6 +14,7 @@ class Commande {
         ?int $idcommande,
         ?int $idutilisateur,
         ?int $idstand,
+        ?int $idorganisateur,
         ?string $datecommande,
         ?string $statut,
         ?float $montanttotal,
@@ -21,6 +23,7 @@ class Commande {
         $this->idcommande = $idcommande;
         $this->idutilisateur = $idutilisateur;
         $this->idstand = $idstand;
+        $this->idorganisateur = $idorganisateur;
         $this->datecommande = $datecommande;
         $this->statut = $statut;
         $this->montanttotal = $montanttotal;
@@ -29,11 +32,12 @@ class Commande {
 
     public function show() {
         echo "<table border='1' cellpadding='5'>";
-        echo "<tr><th>ID Commande</th><th>ID Utilisateur</th><th>ID Stand</th><th>Date Commande</th><th>Statut</th><th>Montant Total</th></tr>";
+        echo "<tr><th>ID Commande</th><th>ID Utilisateur</th><th>ID Stand</th><th>ID Organisateur</th><th>Date Commande</th><th>Statut</th><th>Montant Total</th></tr>";
         echo "<tr>";
         echo "<td>{$this->idcommande}</td>";
         echo "<td>{$this->idutilisateur}</td>";
         echo "<td>{$this->idstand}</td>";
+        echo "<td>{$this->idorganisateur}</td>";
         echo "<td>{$this->datecommande}</td>";
         echo "<td>{$this->statut}</td>";
         echo "<td>" . number_format($this->montanttotal, 2) . "</td>";
@@ -64,6 +68,14 @@ class Commande {
 
     public function setIdstand(?int $idstand): void {
         $this->idstand = $idstand;
+    }
+
+    public function getIdorganisateur(): ?int {
+        return $this->idorganisateur;
+    }
+
+    public function setIdorganisateur(?int $idorganisateur): void {
+        $this->idorganisateur = $idorganisateur;
     }
 
     public function getDatecommande(): ?string {

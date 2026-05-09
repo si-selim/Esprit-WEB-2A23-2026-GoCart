@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../../Controller/StandController.php';
 require_once __DIR__ . '/../../../Controller/ParcoursController.php';
 require_once __DIR__ . '/../../../Model/Stand.php';
 require_once __DIR__ . '/../partials/session.php';
+require_once __DIR__ . '/../lang.php';
 
 if (!isConnected() || (!isAdmin() && !isOrganisateur())) {
     header('Location: ../login.php'); exit;

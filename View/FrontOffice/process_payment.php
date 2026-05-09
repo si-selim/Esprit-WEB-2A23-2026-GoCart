@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $type = $_POST['type'] ?? '';
 $id = (int)($_POST['id'] ?? 0);
 $montant = (float)($_POST['montant'] ?? 0);
+$action = $_POST['action'] ?? 'now';
 $methode = $_POST['methode_paiement'] ?? '';
 $paymentMethodId = $_POST['payment_method_id'] ?? '';
 $d17_reference = trim($_POST['d17_reference'] ?? '');
@@ -41,25 +42,30 @@ function is_valid_d17($value) {
 $message = '';
 $success = false;
 
-// Validation spécifique par méthode
-if ($methode === 'd17') {
-    if (!$d17_reference) {
-        $message = 'La référence D17 est requise.';
-    } elseif (!is_valid_d17($d17_reference)) {
-        $message = 'Référence D17 invalide. Utilisez uniquement lettres, chiffres et tirets.';
+if ($action === 'now') {
+    if (!$methode) {
+        $message = 'Sélectionnez une méthode de paiement.';
     }
-}
 
-if ($methode === 'paypal') {
-    if (!$paypal_email) {
-        $message = 'L\'email PayPal est requis.';
-    } elseif (!is_valid_email($paypal_email)) {
-        $message = 'Email PayPal invalide.';
+    if ($methode === 'd17') {
+        if (!$d17_reference) {
+            $message = 'La référence D17 est requise.';
+        } elseif (!is_valid_d17($d17_reference)) {
+            $message = 'Référence D17 invalide. Utilisez uniquement lettres, chiffres et tirets.';
+        }
     }
-}
 
-if ($methode === 'stripe' && !$paymentMethodId) {
-    $message = 'Aucun identifiant de paiement Stripe reçu. Réessayez.';
+    if ($methode === 'paypal') {
+        if (!$paypal_email) {
+            $message = 'L\'email PayPal est requis.';
+        } elseif (!is_valid_email($paypal_email)) {
+            $message = 'Email PayPal invalide.';
+        }
+    }
+
+    if ($methode === 'stripe' && !$paymentMethodId) {
+        $message = 'Aucun identifiant de paiement Stripe reçu. Réessayez.';
+    }
 }
 
 if ($message) {
@@ -117,54 +123,114 @@ if ($type === 'marathon') {
 }
 
 if ($type === 'commande') {
-    // Pour les commandes, on crée directement la commande en statut payé si le paiement est réussi.
     $commandeC = new CommandeController();
     $ligneC = new LigneCommandeController();
+    $prodCtrl = new ProduitController();
+    $existingOrder = $id > 0 ? $commandeC->showCommande($id) : null;
+    $existingOrderOwner = $existingOrder && $existingOrder['idutilisateur'] == $userId;
 
-    // Simuler le paiement
-    $paiement_reussi = true; // Simulation
+    if ($existingOrder && !$existingOrderOwner) {
+        $redirectUrl = 'paiement.php?type=commande&id=' . $id . '&montant=' . $montant . '&stand_id=' . $stand_id . '&error=' . urlencode('Commande invalide.');
+        header('Location: ' . $redirectUrl);
+        exit;
+    }
 
-    if ($paiement_reussi) {
-        $prodCtrl = new ProduitController();
-        $cartValid = true;
+    if ($action === 'later') {
+        if ($existingOrder && $existingOrderOwner && strtolower(trim($existingOrder['statut'])) === 'en cours') {
+            $commandeC->updateCommandePayment($id, 'en cours', 'en attente');
+            $success = true;
+            $message = 'Commande conservée en attente de paiement. Vous pouvez la régler depuis Mes commandes.';
+        } else {
+            $cartValid = true;
 
-        if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
-            foreach ($_SESSION['cart'] as $item) {
-                $currentProduct = $prodCtrl->getProduit($item['idproduit']);
-                if (!$currentProduct || !$currentProduct['en_out_stock'] || $currentProduct['qte_stock'] < $item['quantite']) {
-                    $cartValid = false;
-                    $message = 'Stock insuffisant pour l’un des produits du panier. Ajustez votre commande avant de payer.';
-                    break;
+            if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+                $cartValid = false;
+                $message = 'Le panier est vide. Impossible de créer la commande.';
+            }
+
+            if ($cartValid) {
+                foreach ($_SESSION['cart'] as $item) {
+                    $currentProduct = $prodCtrl->getProduit($item['idproduit']);
+                    if (!$currentProduct || !$currentProduct['en_out_stock'] || $currentProduct['qte_stock'] < $item['quantite']) {
+                        $cartValid = false;
+                        $message = 'Stock insuffisant pour l’un des produits du panier. Ajustez votre commande avant de payer.';
+                        break;
+                    }
                 }
             }
-        }
 
-        if ($cartValid) {
-            error_log("Process payment - UserId: $userId, StandId: " . ($stand_id ?: 'null') . ", Montant: $montant, Methode: $methode");
-            $commande = new Commande(null, $userId, $stand_id ?: null, date('Y-m-d H:i:s'), 'en cours', $montant, $methode);
-            $newCommandeId = $commandeC->addCommande($commande);
+            if ($cartValid) {
+                $commande = new Commande(null, $userId, $stand_id ?: null, null, date('Y-m-d H:i:s'), 'en cours', $montant, 'en attente');
+                $newCommandeId = $commandeC->addCommande($commande);
 
-            if ($newCommandeId) {
-                if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
+                if ($newCommandeId) {
                     foreach ($_SESSION['cart'] as $item) {
                         $ligne = new LigneCommande(null, $newCommandeId, $item['idproduit'], $item['quantite'], $item['prix']);
                         $ligneC->addLigneCommande($ligne);
                         $prodCtrl->decrementStock($item['idproduit'], $item['quantite']);
                     }
-                }
 
-                $_SESSION['cart'] = [];
-                $success = true;
-                $message = 'Paiement de la commande confirmé !';
-            } else {
-                $message = 'Erreur lors de la création de la commande.';
+                    $_SESSION['cart'] = [];
+                    $success = true;
+                    $message = 'Votre commande a bien été ajoutée à Mes commandes avec le statut « en cours ». Vous avez 24h pour la finaliser.';
+                } else {
+                    $message = 'Erreur lors de la création de la commande.';
+                }
             }
         }
     } else {
-        $message = 'Paiement échoué. Veuillez réessayer.';
+        $paiement_reussi = true; // Simulation
+        $status = 'confirmé';
+        $mode = $methode;
+
+        if ($paiement_reussi) {
+            if ($existingOrder && $existingOrderOwner && strtolower(trim($existingOrder['statut'])) === 'en cours') {
+                $commandeC->updateCommandePayment($id, $status, $mode);
+                $success = true;
+                $message = 'Paiement de la commande confirmé et validé.';
+            } else {
+                $cartValid = true;
+
+                if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
+                    $cartValid = false;
+                    $message = 'Le panier est vide. Impossible de créer la commande.';
+                }
+
+                if ($cartValid) {
+                    foreach ($_SESSION['cart'] as $item) {
+                        $currentProduct = $prodCtrl->getProduit($item['idproduit']);
+                        if (!$currentProduct || !$currentProduct['en_out_stock'] || $currentProduct['qte_stock'] < $item['quantite']) {
+                            $cartValid = false;
+                            $message = 'Stock insuffisant pour l’un des produits du panier. Ajustez votre commande avant de payer.';
+                            break;
+                        }
+                    }
+                }
+
+                if ($cartValid) {
+                    $commande = new Commande(null, $userId, $stand_id ?: null, null, date('Y-m-d H:i:s'), $status, $montant, $mode);
+                    $newCommandeId = $commandeC->addCommande($commande);
+
+                    if ($newCommandeId) {
+                        foreach ($_SESSION['cart'] as $item) {
+                            $ligne = new LigneCommande(null, $newCommandeId, $item['idproduit'], $item['quantite'], $item['prix']);
+                            $ligneC->addLigneCommande($ligne);
+                            $prodCtrl->decrementStock($item['idproduit'], $item['quantite']);
+                        }
+
+                        $_SESSION['cart'] = [];
+                        $success = true;
+                        $message = 'Paiement de la commande confirmé et validé.';
+                    } else {
+                        $message = 'Erreur lors de la création de la commande.';
+                    }
+                }
+            }
+        } else {
+            $message = 'Paiement échoué. Veuillez réessayer.';
+        }
     }
 
-    // Redirection
     if ($success) {
         header('Location: Mes commandes.php?success=' . urlencode($message));
     } else {

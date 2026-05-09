@@ -1,10 +1,11 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../partials/session.php';
+require_once __DIR__ . '/../lang.php';
 if (!isOrganisateur()) { header('Location: ../Stands/listStandsFront.php'); exit; }
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?php echo current_lang(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +21,7 @@ if (!isOrganisateur()) { header('Location: ../Stands/listStandsFront.php'); exit
             font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(180deg, #f5f8f4, #eef8f8);
             color: #102a43;
-            padding: 30px 20px;
+            padding: 0;
         }
 
         .back-link {
@@ -309,7 +310,9 @@ if (!isOrganisateur()) { header('Location: ../Stands/listStandsFront.php'); exit
 </head>
 
 <body>
-    <div style="max-width: 860px; margin: 0 auto;">
+<?php require_once __DIR__ . '/../partials/topbar.php'; ?>
+    <div style="padding-top: 80px;">
+        <div style="max-width:860px;margin:0 auto;padding:0 20px;">
         <?php 
         $standId = isset($_GET['stand_id']) ? (int)$_GET['stand_id'] : (isset($_POST['stand_id']) ? (int)$_POST['stand_id'] : 0);
         $parcoursId = isset($_GET['parcours_id']) ? (int)$_GET['parcours_id'] : (isset($_POST['parcours_id']) ? (int)$_POST['parcours_id'] : 0);
@@ -353,7 +356,8 @@ if (!isOrganisateur()) { header('Location: ../Stands/listStandsFront.php'); exit
         }
         ?>
         <a href="<?php echo $backUrl; ?>" class="back-link">← Retour à la liste</a>
-    </div>
+        </div><!-- /inner max-width -->
+    </div><!-- /padding-top -->
 
     <div class="form-page">
         <div class="form-header">
@@ -410,7 +414,7 @@ if (!isOrganisateur()) { header('Location: ../Stands/listStandsFront.php'); exit
             <button type="submit" name="action" value="<?php echo $editMode ? 'update' : 'add'; ?>" class="btn-submit"><?php echo htmlspecialchars($submitLabel); ?></button>
 
             <div class="action-row" style="margin-top: 15px;">
-                <a href="listProduitsFront.php" class="btn-secondary" style="width: 100%; background: #0f766e; padding: 14px 24px;">📋 Voir la liste des produits (Front)</a>
+                <a href="<?php echo htmlspecialchars($backUrl); ?>" class="btn-secondary" style="width: 100%; background: #0f766e; padding: 14px 24px; color:#fff; text-decoration:none; display:block; text-align:center; border-radius:12px;">📋 Voir la liste des produits</a>
             </div>
         </form>
     </div>

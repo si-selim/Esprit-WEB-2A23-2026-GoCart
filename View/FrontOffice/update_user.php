@@ -96,7 +96,12 @@ try {
 
     $_SESSION['user']['username'] = $nom_user;
     $_SESSION['user']['nom'] = $nom_complet;
+    $_SESSION['user']['nom_complet'] = $nom_complet;
+    $_SESSION['user']['nom_user'] = $nom_user;
     $_SESSION['user']['email'] = $email;
+    $_SESSION['user']['age']    = $userObj->getAge();
+    $_SESSION['user']['poids']  = $userObj->getPoids();
+    $_SESSION['user']['taille'] = $userObj->getTaille();
     header('Location: profile.php?success=' . urlencode('Profil mis a jour.'));
 } catch (PDOException $e) {
     if ($e->getCode() == 23000) {

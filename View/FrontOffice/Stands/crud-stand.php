@@ -1,10 +1,11 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../partials/session.php';
+require_once __DIR__ . '/../lang.php';
 if (!isOrganisateur()) { header('Location: listStandsFront.php'); exit; }
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?php echo current_lang(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +17,7 @@ if (!isOrganisateur()) { header('Location: listStandsFront.php'); exit; }
             font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(180deg, #f5f8f4, #eef8f8);
             color: #102a43;
-            padding: 30px 20px;
+            padding: 0;
         }
 
         .back-link {
@@ -283,14 +284,15 @@ if (!isOrganisateur()) { header('Location: listStandsFront.php'); exit; }
 </head>
 
 <body>
-    <div style="max-width: 860px; margin: 0 auto;">
+<?php require_once __DIR__ . '/../partials/topbar.php'; ?>
+    <div style="padding-top: 80px;">
         <?php 
         $parcoursId = isset($_GET['parcours_id']) ? (int)$_GET['parcours_id'] : (isset($_POST['parcours_id']) ? (int)$_POST['parcours_id'] : 0);
         $backUrl = $parcoursId > 0 ? "../detailParcours.php?id=" . $parcoursId : "listStandsFront.php"; 
         ?>
-        <a href="<?php echo $backUrl; ?>" class="back-link">← Retour à la liste</a>
-    </div>
-
+        <div style="max-width:860px;margin:0 auto;padding:16px 20px 0;">
+            <a href="<?php echo $backUrl; ?>" class="back-link">← Retour à la liste</a>
+        </div>
     <div class="form-page">
         <div class="form-header">
             <div class="form-header-icon">🏪</div>
@@ -325,11 +327,12 @@ if (!isOrganisateur()) { header('Location: listStandsFront.php'); exit; }
             <button type="submit" class="btn-submit">✅ Enregistrer le Stand</button>
 
             <div class="action-row" style="margin-top: 15px;">
-                <a href="<?php echo $backUrl; ?>" class="btn-secondary" style="width: 100%; background: #0f766e; padding: 14px 24px;">📋 Voir la liste des stands (Front)</a>
+                <a href="listStandsFront.php" class="btn-secondary" style="width: 100%; background: #0f766e; padding: 14px 24px;">📋 Voir la liste des stands </a>
             </div>
 
         </form>
-    </div>
+    </div><!-- /form-page -->
+    </div><!-- /padding-top wrapper -->
     
     <script src="controleStand.js"></script>
 </body>

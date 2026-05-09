@@ -11,9 +11,7 @@ class ParcoursController {
         $sql = "SELECT p.*, m.nom_marathon 
                 FROM parcours p 
                 JOIN marathon m ON p.id_marathon = m.id_marathon";
-
         $db = config::getConnexion();
-
         try {
             return $db->query($sql)->fetchAll();
         } catch (Exception $e) {
@@ -21,68 +19,73 @@ class ParcoursController {
         }
     }
 
-    // ========================
-    // AJOUTER PARCOURS
-    // ========================
-    public function ajouterParcours(Parcours $p) {
-    $sql = "INSERT INTO parcours 
-    (nom_parcours, point_depart, point_arrivee, distance, difficulte, id_marathon)
-    VALUES (:nom, :depart, :arrivee, :distance, :difficulte, :id_marathon)";
+    public function getParcoursByMarathon($marathonId) {
+        $sql = "SELECT * FROM parcours WHERE id_marathon = :id_marathon";
+        $db = config::getConnexion();
 
-    $db = config::getConnexion();
-
-    try {
-        $query = $db->prepare($sql);
-        $query->execute([
-            ':nom' => $p->getNomParcours(),
-            ':depart' => $p->getPointDepart(),
-            ':arrivee' => $p->getPointArrivee(),
-            ':distance' => $p->getDistance(),
-            ':difficulte' => $p->getDifficulte(),
-            ':id_marathon' => $p->getIdMarathon()
-        ]);
-
-        return true; // ✅ IMPORTANT
-
-    } catch (Exception $e) {
-        return false; // ❌ en cas d'erreur
+        try {
+            $query = $db->prepare($sql);
+            $query->execute(['id_marathon' => $marathonId]);
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            die('Error: ' . $e->getMessage());
+        }
     }
-}
-    
+    public function ajouterParcours(Parcours $p) {
+        $sql = "INSERT INTO parcours 
+        (nom_parcours, point_depart, point_arrivee, distance, difficulte, id_marathon, heure_depart)
+        VALUES (:nom, :depart, :arrivee, :distance, :difficulte, :id_marathon, :heure_depart)";
+
+        $db = config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute([
+                ':nom'          => $p->getNomParcours(),
+                ':depart'       => $p->getPointDepart(),
+                ':arrivee'      => $p->getPointArrivee(),
+                ':distance'     => $p->getDistance(),
+                ':difficulte'   => $p->getDifficulte(),
+                ':id_marathon'  => $p->getIdMarathon(),
+                ':heure_depart' => $p->getHeureDepart(),
+            ]);
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
 
     // ========================
     // MODIFIER PARCOURS
     // ========================
     public function modifierParcours(Parcours $p, $id) {
-    $sql = "UPDATE parcours SET 
-                nom_parcours=:nom,
-                point_depart=:depart,
-                point_arrivee=:arrivee,
-                distance=:distance,
-                difficulte=:difficulte,
-                id_marathon=:id_marathon
-            WHERE id_parcours=:id";
+        $sql = "UPDATE parcours SET 
+                    nom_parcours=:nom,
+                    point_depart=:depart,
+                    point_arrivee=:arrivee,
+                    distance=:distance,
+                    difficulte=:difficulte,
+                    id_marathon=:id_marathon,
+                    heure_depart=:heure_depart
+                WHERE id_parcours=:id";
 
-    $db = config::getConnexion();
-
-    try {
-        $query = $db->prepare($sql);
-        $query->execute([
-            ':id' => $id,
-            ':nom' => $p->getNomParcours(),
-            ':depart' => $p->getPointDepart(),
-            ':arrivee' => $p->getPointArrivee(),
-            ':distance' => $p->getDistance(),
-            ':difficulte' => $p->getDifficulte(),
-            ':id_marathon' => $p->getIdMarathon()
-        ]);
-
-        return true; // ✅ IMPORTANT
-
-    } catch (Exception $e) {
-        return false;
+        $db = config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute([
+                ':id'           => $id,
+                ':nom'          => $p->getNomParcours(),
+                ':depart'       => $p->getPointDepart(),
+                ':arrivee'      => $p->getPointArrivee(),
+                ':distance'     => $p->getDistance(),
+                ':difficulte'   => $p->getDifficulte(),
+                ':id_marathon'  => $p->getIdMarathon(),
+                ':heure_depart' => $p->getHeureDepart(),
+            ]);
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
     }
-}
 
     // ========================
     // SUPPRIMER PARCOURS
@@ -90,7 +93,6 @@ class ParcoursController {
     public function supprimerParcours($id) {
         $sql = "DELETE FROM parcours WHERE id_parcours = :id";
         $db = config::getConnexion();
-
         try {
             $req = $db->prepare($sql);
             $req->bindValue(':id', $id);
@@ -104,22 +106,20 @@ class ParcoursController {
     // GET PARCOURS BY ID
     // ========================
     public function showParcours($id) {
-    $sql = "SELECT * FROM parcours WHERE id_parcours = :id";
-    $db = config::getConnexion();
-
-    try {
-        $query = $db->prepare($sql);
-        $query->execute([':id' => $id]);
-        return $query->fetch();
-    } catch(Exception $e) {
-        die('Error: ' . $e->getMessage());
-    }
+        $sql = "SELECT * FROM parcours WHERE id_parcours = :id";
+        $db = config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute([':id' => $id]);
+            return $query->fetch();
+        } catch(Exception $e) {
+            die('Error: ' . $e->getMessage());
+        }
     }
 
     public function rechercherParcoursParNom($search) {
         $sql = "SELECT p.*, m.nom_marathon FROM parcours p JOIN marathon m ON p.id_marathon = m.id_marathon WHERE p.nom_parcours LIKE :s OR p.point_depart LIKE :s OR p.point_arrivee LIKE :s";
         $db = config::getConnexion();
-
         try {
             $query = $db->prepare($sql);
             $query->execute(['s' => "%$search%"]);
@@ -132,7 +132,6 @@ class ParcoursController {
     public function filtrerParcours($difficulte) {
         $sql = "SELECT p.*, m.nom_marathon FROM parcours p JOIN marathon m ON p.id_marathon = m.id_marathon WHERE p.difficulte = :diff";
         $db = config::getConnexion();
-
         try {
             $query = $db->prepare($sql);
             $query->execute(['diff' => $difficulte]);
@@ -150,9 +149,7 @@ class ParcoursController {
                     SUM(CASE WHEN difficulte='moyen' THEN 1 ELSE 0 END) as moyen,
                     SUM(CASE WHEN difficulte='difficile' THEN 1 ELSE 0 END) as difficile
                 FROM parcours";
-
         $db = config::getConnexion();
-
         try {
             return $db->query($sql)->fetch();
         } catch (Exception $e) {

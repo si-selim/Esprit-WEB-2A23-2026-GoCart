@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/../FrontOffice/lang.php';
 require_once __DIR__ . '/../../Controller/MarathonController.php';
 require_once __DIR__ . '/../../Controller/ParcoursController.php';
 require_once __DIR__ . '/../../Controller/UserController.php';

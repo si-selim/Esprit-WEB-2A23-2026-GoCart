@@ -17,7 +17,7 @@ class LigneCommandeController {
             ]);
             return $db->lastInsertId();
         } catch (Exception $e) {
-            echo 'Error: ' . $e->getMessage();
+            error_log('LigneCommandeController::add error: ' . $e->getMessage());
             return false;
         }
     }
@@ -41,7 +41,8 @@ class LigneCommandeController {
                 'prixunitaire' => $ligne->getPrixunitaire()
             ]);
         } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
+            error_log('LigneCommandeController::update error: ' . $e->getMessage());
+            throw $e;
         }
     }
 

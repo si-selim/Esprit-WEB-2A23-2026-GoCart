@@ -26,8 +26,8 @@
     <div class="footer-container">
         <h3>Rejoignez la communauté</h3>
         <div class="social-icons">
-            <a href="#" class="icon-fb"><i class="fab fa-facebook"></i></a>
-            <a href="#" class="icon-ig"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.facebook.com/share/1CjR3F7HVx/" target="_blank" rel="noopener" class="icon-fb"><i class="fab fa-facebook"></i></a>
+            <a href="https://www.instagram.com/barcha_thon?igsh=MWo4NTNuamYyZXM2ZA==" target="_blank" rel="noopener" class="icon-ig"><i class="fab fa-instagram"></i></a>
         </div>
         <div class="footer-info">
             <p>contact@barchathon.tn | +216 22 684 630</p>

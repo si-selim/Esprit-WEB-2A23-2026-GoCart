@@ -46,8 +46,9 @@ if (empty($parcours)): ?>
 <div class="empty-box">🗺️ Aucun parcours trouvé pour ce marathon.</div>
 <?php else:
     foreach ($parcours as $p):
-        $dc = ['facile'=>'diff-facile','moyen'=>'diff-moyen','difficile'=>'diff-difficile'][$p['difficulte']] ?? 'diff-moyen';
-        $dl = ['facile'=>'🟢 Facile','moyen'=>'🟡 Moyen','difficile'=>'🔴 Difficile'][$p['difficulte']] ?? $p['difficulte'];
+        $diffRaw = strtolower(trim($p['difficulte'] ?? ''));
+        $dc = ['facile'=>'diff-facile','moyen'=>'diff-moyen','difficile'=>'diff-difficile'][$diffRaw] ?? 'diff-moyen';
+        $dl = ['facile'=>'🟢 Facile','moyen'=>'🟡 Moyen','difficile'=>'🔴 Difficile'][$diffRaw] ?? (!empty($p['difficulte']) ? htmlspecialchars($p['difficulte']) : 'Non défini');
 ?>
 <div class="p-card">
     <div class="diff-band <?php echo $dc; ?>"><?php echo $dl; ?></div>
@@ -56,13 +57,14 @@ if (empty($parcours)): ?>
         <div class="p-route">
             <span>📍 <strong>Départ :</strong> <?php echo htmlspecialchars($p['point_depart']); ?></span>
             <span>🏁 <strong>Arrivée :</strong> <?php echo htmlspecialchars($p['point_arrivee']); ?></span>
+            <?php if (!empty($p['heure_depart'])): ?><span>⏰ <strong>Heure de départ :</strong> <?php echo htmlspecialchars(substr($p['heure_depart'], 0, 5)); ?></span><?php endif; ?>
         </div>
         <div class="dist-row">
             <div>
                 <div class="dist-val"><?php echo number_format((float)$p['distance'], 2); ?> km</div>
             </div>
             <div style="display:flex;justify-content:flex-end;flex-grow:1;margin-top:10px;">
-                <a href="details.php?id=<?php echo $p['id_parcours']; ?>"
+                <a href="detailParcours.php?id=<?php echo $p['id_parcours']; ?>"
                    style="background:linear-gradient(135deg,#149184,#0eb19d);color:white;padding:6px 15px;border-radius:20px;text-decoration:none;font-weight:bold;font-size:0.85rem;display:flex;align-items:center;gap:5px;box-shadow:0 2px 5px rgba(0,0,0,0.1);">
                    Voir détail <span style="font-size:1.1rem;">→</span>
                 </a>

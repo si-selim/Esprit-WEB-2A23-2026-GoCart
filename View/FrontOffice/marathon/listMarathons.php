@@ -12,6 +12,14 @@ if (isset($_GET['delete'])) {
 
 $marathons = $controller->afficherMarathon();
 
+if ($search !== '') {
+    $marathons = $controller->rechercherMarathon($search);
+} elseif ($filterRegion !== '') {
+    $marathons = $controller->filtrerMarathon($filterRegion);
+} else {
+    $marathons = $controller->afficherMarathon();
+}
+
 $stats = $controller->statsNbMarathonsDispo();
 $regions = $controller->getRegions();
 ?>
@@ -149,7 +157,12 @@ $regions = $controller->getRegions();
                                 <td><strong><?php echo htmlspecialchars($m['nom_marathon']); ?></strong></td>
                                 <td><?php echo htmlspecialchars($m['organisateur_marathon']); ?></td>
                                 <td><span class="tag">📍 <?php echo htmlspecialchars($m['region_marathon']); ?></span></td>
-                                <td><?php echo date('d/m/Y', strtotime($m['date_marathon'])); ?></td>
+                                <td>
+                                    <div style="display:flex;flex-direction:column;gap:4px;">
+                                        <span style="font-weight:700;">📅 <?php echo date('d/m/Y', strtotime($m['date_marathon'])); ?></span>
+                                        <span class="meteo-badge-admin" data-date="<?php echo htmlspecialchars($m['date_marathon']); ?>" data-city="<?php echo htmlspecialchars(explode('-', $m['region_marathon'])[0]); ?>" style="display:inline-block;font-size:0.78rem;background:rgba(15,118,110,.08);border-radius:999px;padding:2px 8px;color:#0f766e;font-weight:700;width:fit-content;">⏳</span>
+                                    </div>
+                                </td>
                                 <td><?php echo $m['nb_places_dispo']>0 ? '<span class="tag">✅ '.$m['nb_places_dispo'].'</span>' : '<span class="tag tag-coral">❌ Complet</span>'; ?></td>
                                 <td><strong><?php echo number_format($m['prix_marathon'],2); ?></strong></td>
                                 <td>
@@ -176,6 +189,46 @@ document.getElementById('searchInput').addEventListener('input', function() {
     clearTimeout(t);
     t = setTimeout(function(){ document.getElementById('filterForm').submit(); }, 500);
 });
+</script>
+<script>
+// Météo badges dans le tableau admin
+(async function() {
+    const badges = document.querySelectorAll('.meteo-badge-admin');
+    for (const badge of badges) {
+        const city = badge.dataset.city;
+        const date = badge.dataset.date;
+        if (!city || !date) continue;
+        try { await loadMeteoAdmin(badge, city, date); } catch(e) { badge.textContent=''; }
+        await new Promise(r => setTimeout(r, 120));
+    }
+})();
+
+async function loadMeteoAdmin(badge, city, dateStr) {
+    const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=fr&format=json`);
+    const geoData = await geoResp.json();
+    if (!geoData.results?.length) { badge.textContent=''; return; }
+    const {latitude:lat, longitude:lon} = geoData.results[0];
+    const wResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,precipitation_sum,windspeed_10m_max,weathercode&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`);
+    const wData = await wResp.json();
+    if (!wData.daily?.time?.length) { badge.textContent=''; return; }
+    const temp = Math.round(wData.daily.temperature_2m_max[0]);
+    const rain = wData.daily.precipitation_sum[0] || 0;
+    const wind = wData.daily.windspeed_10m_max[0] || 0;
+    const code = wData.daily.weathercode[0];
+    const tempIcon = temp > 32 ? '🔥' : temp < 10 ? '🥶' : '🌡️';
+    const rainIcon = rain > 20 ? '🌧️' : rain > 5 ? '🌦️' : '☀️';
+    const windIcon = wind > 50 ? '💨' : wind > 25 ? '🌬️' : '';
+    badge.innerHTML = `${rainIcon} ${temp}°C ${tempIcon}${windIcon ? ' '+windIcon : ''}`;
+    badge.title = `Température: ${temp}°C | Pluie: ${rain.toFixed(1)}mm | Vent: ${wind.toFixed(0)}km/h`;
+    // Color warning
+    if (temp > 34 || rain > 10 || wind > 50) {
+        badge.style.background = 'rgba(231,111,81,.15)';
+        badge.style.color = '#b91c1c';
+    } else if (temp > 28 || rain > 5) {
+        badge.style.background = 'rgba(255,183,3,.18)';
+        badge.style.color = '#92400e';
+    }
+}
 </script>
 </body>
 </html>

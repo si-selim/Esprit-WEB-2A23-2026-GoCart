@@ -43,7 +43,7 @@ if (empty($marathons)): ?>
 <div class="card" style="cursor:default;">
     <a href="detailMarathon.php?id=<?php echo $m['id_marathon']; ?>" style="text-decoration:none;color:inherit;display:block;">
         <div class="card-img-wrap">
-            <img src="<?php echo htmlspecialchars($m['image_marathon']); ?>" alt="<?php echo htmlspecialchars($m['nom_marathon']); ?>" onerror="this.src='images/img1.svg'">
+            <img src="<?php echo (!empty($m['image_marathon']) ? htmlspecialchars($m['image_marathon']) : 'marathon/images/hero_runner.png'); ?>" alt="<?php echo htmlspecialchars($m['nom_marathon']); ?>" onerror="this.src='marathon/images/hero_runner.png'">
             <span class="card-id">#<?php echo $m['id_marathon']; ?></span>
         </div>
         <div class="card-body">

@@ -1,7 +1,8 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
-require_once __DIR__ . '/partials/session.php';
-require_once __DIR__ . '/../../Controller/produitcontroller.php';
+require_once __DIR__ . '/../partials/session.php';
+require_once __DIR__ . '/../lang.php';
+require_once __DIR__ . '/../../../Controller/produitcontroller.php';
 
 $produitController = new ProduitController();
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'ID_produit';
@@ -17,7 +18,7 @@ $currentPage = 'stands';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Produits | BarchaThon</title>
+    <title><?php echo t('pr_list_title'); ?> | BarchaThon</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .page { width:min(1180px,calc(100% - 32px)); margin:0 auto; padding:36px 0 0; }
@@ -110,14 +111,14 @@ $currentPage = 'stands';
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 <div class="page">
     <div class="top-bar">
-        <h1>📦 Espace Produits</h1>
+        <h1>📦 <?php echo t('pr_list_title'); ?></h1>
         <?php if (isOrganisateur()): ?>
             <a href="crud-produit.php" class="btn-add">➕ Ajouter un produit</a>
         <?php endif; ?>
     </div>
 
     <div class="table-container">
-        <h2 class="table-title">📦 Tous les produits enregistrés</h2>
+        <h2 class="table-title">📦 <?php echo t('pr_table_title'); ?></h2>
         
         <table>
             <thead>

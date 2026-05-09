@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/../../Controller/MarathonController.php';
 require_once __DIR__ . '/../../Controller/ParcoursController.php';
 $controller = new MarathonController();
@@ -21,11 +22,11 @@ $user = getCurrentUser();
 $role = $user['role'] ?? 'visiteur';
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?php echo current_lang(); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Catalogue Marathons — BarchaThon</title>
+    <title><?php echo t('catalog_title'); ?> — BarchaThon</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root { --ink:#102a43; --teal:#0f766e; --sun:#ffb703; --coral:#e76f51; }
@@ -112,6 +113,9 @@ $role = $user['role'] ?? 'visiteur';
 
         .empty-state { text-align:center; padding:60px 20px; color:#627d98; }
         @keyframes rise { to { opacity:1; transform:translateY(0); } }
+        /* MÉTÉO BADGE */
+        .meteo-badge { transition: all .3s; white-space: nowrap; }
+
         @media(max-width:768px){ .hero-strip{grid-template-columns:1fr;} }
 
         /* AUTOCOMPLETE */
@@ -144,19 +148,19 @@ $role = $user['role'] ?? 'visiteur';
 
     <section class="hero-strip">
         <div class="hero-card">
-            <h1>Catalogue des Marathons</h1>
-            <p>Explorez tous les événements de course en Tunisie.</p>
+            <h1><?php echo t('catalog_hero_title'); ?></h1>
+            <p><?php echo t('catalog_hero_sub'); ?></p>
         </div>
         <div class="hero-stats">
             <div class="mini-box">
                 <div class="stats-row">
                     <div class="mini-cell">
                         <div class="val"><?php echo count($marathons); ?></div>
-                        <div class="lbl">Marathons</div>
+                        <div class="lbl"><?php echo t('home_stat_marathons'); ?></div>
                     </div>
                     <div class="mini-cell">
                         <div class="val"><?php echo number_format((float)($stats['total_places']??0)); ?></div>
-                        <div class="lbl">Places</div>
+                        <div class="lbl"><?php echo t('detail_places'); ?></div>
                     </div>
                 </div>
             </div>
@@ -164,21 +168,21 @@ $role = $user['role'] ?? 'visiteur';
                 <div class="stats-row">
                     <div class="mini-cell">
                         <div class="val"><?php echo $pStats['total'] ?? 0; ?></div>
-                        <div class="lbl">Parcours</div>
+                        <div class="lbl"><?php echo t('parcours_title'); ?></div>
                     </div>
                     <div class="mini-cell">
                         <div class="difficulty-grid">
                             <div class="diff-chip diff-facile">
                                 <span><?php echo $pStats['facile'] ?? 0; ?></span>
-                                <small>Facile</small>
+                                <small><?php echo t('parcours_easy'); ?></small>
                             </div>
                             <div class="diff-chip diff-moyen">
                                 <span><?php echo $pStats['moyen'] ?? 0; ?></span>
-                                <small>Moyen</small>
+                                <small><?php echo t('parcours_medium'); ?></small>
                             </div>
                             <div class="diff-chip diff-difficile">
                                 <span><?php echo $pStats['difficile'] ?? 0; ?></span>
-                                <small>Difficile</small>
+                                <small><?php echo t('parcours_hard'); ?></small>
                             </div>
                         </div>
                     </div>
@@ -190,11 +194,11 @@ $role = $user['role'] ?? 'visiteur';
     <div class="filter-section">
         <div class="filter-bar" id="filterBar">
             <div class="search-wrap">
-                <input type="text" id="searchInput" placeholder="🔍 Rechercher par nom..." value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
+                <input type="text" id="searchInput" placeholder="🔍 <?php echo htmlspecialchars(t('catalog_search_ph')); ?>" value="<?php echo htmlspecialchars($search); ?>" autocomplete="off">
                 <div class="autocomplete-list" id="autocompleteList"></div>
             </div>
             <select id="regionSelect" style="border-radius:13px;border:1px solid #cbd5e1;padding:12px 16px;font:inherit;flex:1 1 220px;min-width:0;max-width:280px;">
-                <option value="">🌍 Toutes les régions</option>
+                <option value="">🌍 <?php echo t('catalog_filter'); ?></option>
                 <?php foreach ($regions as $r): ?>
                     <option value="<?php echo htmlspecialchars($r); ?>" <?php echo $filterRegion===$r?'selected':''; ?>><?php echo htmlspecialchars($r); ?></option>
                 <?php endforeach; ?>
@@ -204,12 +208,12 @@ $role = $user['role'] ?? 'visiteur';
 
     <div class="toolbar-row">
         <div style="display:flex;align-items:center;gap:12px;">
-            <h2 style="font-size:1.8rem;">Tous les Marathons</h2>
-            <span class="count-badge" id="countBadge"><?php echo count($marathons); ?> résultats</span>
+            <h2 style="font-size:1.8rem;"><?php echo t('catalog_hero_title'); ?></h2>
+            <span class="count-badge" id="countBadge"><?php echo count($marathons); ?> <?php echo (count($marathons) === 1 ? t('catalog_result') : t('catalog_results')); ?></span>
         </div>
         <div style="display:flex;gap:8px;">
             <?php if ($role === 'organisateur'): ?>
-                <a href="marathon/addMarathon.php" class="btn-add">➕ Ajouter un marathon</a>
+                <a href="marathon/addMarathon.php" class="btn-add">➕ <?php echo t('catalog_add'); ?></a>
             <?php endif; ?>
         </div>
     </div>
@@ -218,7 +222,7 @@ $role = $user['role'] ?? 'visiteur';
     <?php if (empty($marathons)): ?>
         <div class="empty-state">
             <div style="font-size:3rem;margin-bottom:14px;">🏃</div>
-            <h3>Aucun marathon trouvé</h3>
+            <h3><?php echo t('catalog_none'); ?></h3>
         </div>
     <?php else: ?>
     <section class="catalog" id="marathonGrid">
@@ -226,31 +230,31 @@ $role = $user['role'] ?? 'visiteur';
         <div class="card" style="cursor:default;">
             <a href="detailMarathon.php?id=<?php echo $m['id_marathon']; ?>" style="text-decoration:none;color:inherit;display:block;">
                 <div class="card-img-wrap">
-                    <img src="images/hero_runner.png" alt="<?php echo htmlspecialchars($m['nom_marathon']); ?>" onerror="this.src='images/img1.svg'">
+                    <img src="<?php echo (!empty($m['image_marathon']) ? htmlspecialchars($m['image_marathon']) : 'marathon/images/hero_runner.png'); ?>" alt="<?php echo htmlspecialchars($m['nom_marathon']); ?>" onerror="this.src='marathon/images/hero_runner.png'">
                     <span class="card-id">#<?php echo $m['id_marathon']; ?></span>
                 </div>
                 <div class="card-body">
                     <div class="pill-row">
                         <span class="pill">📍 <?php echo htmlspecialchars($m['region_marathon']); ?></span>
-                        <span class="pill pill-sun"><?php echo $m['nb_places_dispo']>0?'✅ '.$m['nb_places_dispo'].' places':'❌ Complet'; ?></span>
+                        <span class="pill pill-sun"><?php echo $m['nb_places_dispo']>0?'✅ '.$m['nb_places_dispo'].' '.t('catalog_places_left') :'❌ '.t('catalog_full'); ?></span>
                     </div>
                     <h3><?php echo htmlspecialchars($m['nom_marathon']); ?></h3>
                     <div class="meta">
                         <span>👤 <?php echo htmlspecialchars($m['organisateur_marathon']); ?></span>
-                        <span>📅 <?php echo date('d/m/Y',strtotime($m['date_marathon'])); ?></span>
+                        <span id="daterow-<?php echo $m['id_marathon']; ?>">📅 <?php echo date('d/m/Y',strtotime($m['date_marathon'])); ?><br><span class="meteo-badge" id="meteo-<?php echo $m['id_marathon']; ?>" data-date="<?php echo htmlspecialchars($m['date_marathon']); ?>" data-city="<?php echo htmlspecialchars($m['region_marathon']); ?>" style="display:inline-block;margin-top:4px;font-size:0.78rem;background:rgba(15,118,110,.08);border-radius:999px;padding:2px 8px;color:#0f766e;font-weight:700;">⏳</span></span>
                     </div>
                     <div class="card-footer">
                         <span class="price"><?php echo number_format($m['prix_marathon'],2); ?> TND</span>
-                        <span class="btn-detail">Voir détail →</span>
+                        <span class="btn-detail"><?php echo t('catalog_view_detail'); ?> →</span>
                     </div>
                 </div>
             </a>
             <?php if ($role === 'organisateur' || $role === 'admin'): ?>
             <div class="card-actions" style="padding:12px;border-top:1px solid #e5e7eb;display:flex;gap:8px;">
                 <?php if ($role === 'organisateur'): ?>
-                <a href="marathon/updateMarathon.php?id=<?php echo $m['id_marathon']; ?>" class="btn-mod-card">✏️ Modifier</a>
+                <a href="marathon/updateMarathon.php?id=<?php echo $m['id_marathon']; ?>" class="btn-mod-card">✏️ <?php echo t('detail_modify'); ?></a>
                 <?php endif; ?>
-                <button class="btn-del-card" style="flex:1;padding:8px;font-size:0.85rem;" onclick="confirmDelete(<?php echo $m['id_marathon']; ?>, '<?php echo addslashes($m['nom_marathon']); ?>')">🗑️ Supprimer</button>
+                <button class="btn-del-card" style="flex:1;padding:8px;font-size:0.85rem;" onclick="confirmDelete(<?php echo $m['id_marathon']; ?>, '<?php echo addslashes($m['nom_marathon']); ?>')">🗑️ <?php echo t('detail_delete'); ?></button>
             </div>
             <?php endif; ?>
         </div>
@@ -266,11 +270,11 @@ $role = $user['role'] ?? 'visiteur';
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-box">
         <div class="modal-icon">🗑️</div>
-        <h3>Confirmation</h3>
-        <p id="deleteModalText">Supprimer ce marathon ?</p>
+        <h3><?php echo t('st_confirm'); ?></h3>
+        <p id="deleteModalText"><?php echo t('detail_confirm_del'); ?></p>
         <div class="modal-btns">
-            <button class="btn-confirm-del" id="confirmDelBtn">Oui, supprimer</button>
-            <button class="btn-cancel" onclick="closeDeleteModal()">Annuler</button>
+            <button class="btn-confirm-del" id="confirmDelBtn"><?php echo t('detail_yes_del'); ?></button>
+            <button class="btn-cancel" onclick="closeDeleteModal()"><?php echo t('detail_cancel'); ?></button>
         </div>
     </div>
 </div>
@@ -297,7 +301,7 @@ $role = $user['role'] ?? 'visiteur';
             .then(r => r.json())
             .then(data => {
                 catalogWrapper.innerHTML = data.html;
-                countBadge.textContent  = data.count + ' résultat' + (data.count !== 1 ? 's' : '');
+                countBadge.textContent  = data.count + ' ' + (data.count !== 1 ? <?php echo json_encode(t('catalog_results')); ?> : <?php echo json_encode(t('catalog_result')); ?>);
             })
             .catch(console.error);
     }
@@ -410,6 +414,50 @@ $role = $user['role'] ?? 'visiteur';
         if (e.target === this) closeDeleteModal();
     });
 })();
+
+// ── Météo badges dans le catalogue ──────────────────────────────────────────
+(async function() {
+    const badges = document.querySelectorAll('.meteo-badge[data-date][data-city]');
+    for (const badge of badges) {
+        const city = badge.dataset.city;
+        const date = badge.dataset.date;
+        if (!city || !date) continue;
+        try { await loadMeteoBadge(badge, city, date); } catch(e) { badge.textContent=''; }
+        await new Promise(r => setTimeout(r, 120));
+    }
+})();
+
+async function loadMeteoBadge(badge, city, dateStr) {
+    // Pour les marathons multi-régions (ex: "Tunis-Ariana"), prendre la première région
+    const cityFirst = city.split('-')[0].trim();
+    const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityFirst)}&count=1&language=fr&format=json`);
+    const geoData = await geoResp.json();
+    if (!geoData.results?.length) { badge.textContent=''; return; }
+    const {latitude:lat, longitude:lon} = geoData.results[0];
+    const wResp = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,precipitation_sum,windspeed_10m_max,weathercode&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`);
+    const wData = await wResp.json();
+    if (!wData.daily?.time?.length) { badge.textContent=''; return; }
+    const temp = Math.round(wData.daily.temperature_2m_max[0]);
+    const rain = wData.daily.precipitation_sum[0] || 0;
+    const wind = wData.daily.windspeed_10m_max[0] || 0;
+    const rainIcon = rain > 20 ? '🌧️' : rain > 5 ? '🌦️' : '☀️';
+    let desc;
+    if (rain > 20) desc = 'Pluie forte';
+    else if (rain > 5) desc = 'Pluie légère';
+    else if (temp > 34) desc = 'Très chaud';
+    else if (temp > 28) desc = 'Ensoleillé';
+    else if (temp < 10) desc = 'Froid vif';
+    else desc = 'Beau temps';
+    badge.innerHTML = `${rainIcon} ${temp}°C — ${desc}`;
+    badge.title = `Température: ${temp}°C | Pluie: ${rain.toFixed(1)}mm | Vent: ${wind.toFixed(0)}km/h`;
+    if (temp > 34 || rain > 10 || wind > 50) {
+        badge.style.background = 'rgba(231,111,81,.15)';
+        badge.style.color = '#b91c1c';
+    } else if (temp > 28 || rain > 5) {
+        badge.style.background = 'rgba(255,183,3,.18)';
+        badge.style.color = '#92400e';
+    }
+}
 </script>
 </body>
 </html>

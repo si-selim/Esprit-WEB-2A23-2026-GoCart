@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 require_once __DIR__ . '/../../Controller/UserController.php';
 
 if (!isConnected()) { header('Location: login.php'); exit; }
@@ -130,7 +131,7 @@ $currentPage = 'profile';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Mon profil — BarchaThon</title>
+    <title><?php echo t('profile_title'); ?> — BarchaThon</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -204,7 +205,7 @@ $currentPage = 'profile';
 
 <div class="profile-layout">
     <aside class="panel fade-in">
-        <h2>Mon espace</h2>
+        <h2><?php echo t('profile_title'); ?></h2>
         <div class="avatar" style="width:80px;height:80px;border-radius:50%;margin:16px auto;<?php echo !empty($u['profile_picture']) ? 'background:transparent;box-shadow:none;animation:none;border-color:transparent;' : ''; ?>">
             <?php if (!empty($u['profile_picture'])): ?>
                 <img src="images/uploads/<?php echo htmlspecialchars($u['profile_picture']); ?>" alt="">
@@ -367,8 +368,8 @@ $currentPage = 'profile';
                         </div>
                     </div>
                     <div class="actions">
-                        <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> Enregistrer</button>
-                        <a class="btn btn-secondary" href="profile.php">Annuler</a>
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-save"></i> <?php echo t('bo_save'); ?></button>
+                        <a class="btn btn-secondary" href="profile.php"><?php echo t('detail_cancel'); ?></a>
                     </div>
                 </form>
             </section>
@@ -554,11 +555,11 @@ $currentPage = 'profile';
 
 <div id="confirm-modal" class="modal-overlay">
     <div class="modal-box">
-        <h3>Confirmation</h3>
+        <h3><?php echo t('st_confirm'); ?></h3>
         <p id="confirm-message"></p>
         <div class="modal-actions">
-            <button id="confirm-yes" class="btn btn-danger">Oui, supprimer</button>
-            <button class="btn btn-secondary" data-modal-close>Annuler</button>
+            <button id="confirm-yes" class="btn btn-danger"><?php echo t('detail_yes_del'); ?></button>
+            <button class="btn btn-secondary" data-modal-close><?php echo t('detail_cancel'); ?></button>
         </div>
     </div>
 </div>

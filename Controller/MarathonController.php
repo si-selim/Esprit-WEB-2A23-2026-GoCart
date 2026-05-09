@@ -150,6 +150,18 @@ class MarathonController {
     return "images/uploads/" . $name;
 }
 
+    public function filtrerMarathon($region) {
+        $sql = "SELECT * FROM marathon WHERE region_marathon = :region ORDER BY nom_marathon ASC";
+        $db = config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute(['region' => $region]);
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            die('Error: ' . $e->getMessage());
+        }
+    }
+
     public function rechercherMarathon($search) {
         $sql = "SELECT * FROM marathon 
                 WHERE nom_marathon LIKE :s 
@@ -167,20 +179,18 @@ class MarathonController {
         }
     }
 
-    public function filtrerMarathon($region) {
-    $sql = "SELECT * FROM marathon 
-            WHERE region_marathon = :region
-            ORDER BY nom_marathon ASC";
-    $db = config::getConnexion();
+    public function getMarathonsByOrganisateur($organisateurId) {
+        $sql = "SELECT * FROM marathon WHERE organisateur_marathon = :organisateur";
+        $db = config::getConnexion();
 
-    try {
-        $query = $db->prepare($sql);
-        $query->execute(['region' => $region]);
-        return $query->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        die('Error: ' . $e->getMessage());
+        try {
+            $query = $db->prepare($sql);
+            $query->execute(['organisateur' => $organisateurId]);
+            return $query->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            die('Error: ' . $e->getMessage());
+        }
     }
-}
 
     public function listMarathons() {
         $sql = "SELECT * FROM marathon";

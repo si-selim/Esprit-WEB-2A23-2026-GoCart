@@ -1,6 +1,7 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
+require_once __DIR__ . '/lang.php';
 
 $user = getCurrentUser();
 if (!$user) {
@@ -11,6 +12,7 @@ if (!$user) {
 $userId = $user['id_user'] ?? $user['id'];
 
 include '../../Controller/CommandeController.php';
+include '../../Controller/UserController.php';
 
 $searchId = trim($_GET['search_id'] ?? '');
 $sort_by = $_GET['sort_by'] ?? 'date';
@@ -18,6 +20,8 @@ $sort_order = $_GET['sort_order'] ?? 'desc';
 $statusFilter = $_GET['status'] ?? 'all';
 
 $commandeC = new CommandeController();
+$userCtrl = new UserController();
+$commandeC->expireOldOrders();
 $deleteMessage = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_order_id'])) {
@@ -38,20 +42,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_order_id'])) 
     $commande = $commandeC->showCommande($orderId);
 
     if ($commande && strtolower(trim($commande['statut'])) === 'en cours' && $commande['idutilisateur'] == $userId) {
-        // Envoyer email avec lien de confirmation
+        // Envoyer email avec lien de paiement
         require_once '../../Controller/Mailer.php';
-        $userEmail = $user['email'] ?? '';
+        $commandeUser = $userCtrl->showUser($commande['idutilisateur']);
+        $userEmail = $commandeUser['email'] ?? '';
         if ($userEmail) {
-            $subject = 'Confirmer votre commande - BarchaThon';
-            $confirmationLink = "http://" . $_SERVER['HTTP_HOST'] . "/Integ-standProduit/View/FrontOffice/confirm_order.php?id=" . $orderId;
+            $subject = 'Paiement requis - BarchaThon';
+            $paymentLink = "http://" . $_SERVER['HTTP_HOST'] . "/Integ-standProduit/View/FrontOffice/paiement.php?type=commande&id=" . $orderId . "&montant=" . urlencode($commande['montanttotale']) . "&stand_id=" . urlencode($commande['idstand']);
             $body = "<p>Bonjour,</p>\n"
-                  . "<p>Vous avez demandé à confirmer votre commande #" . $orderId . ".</p>\n"
+                  . "<p>Une action est requise pour votre commande #" . $orderId . " :</p>\n"
                   . "<p>Montant : <strong>" . number_format($commande['montanttotale'], 2, ',', ' ') . " TND</strong></p>\n"
                   . "<p>Date : " . date('d/m/Y H:i', strtotime($commande['datecommande'])) . "</p>\n"
                   . "<p>Stand : #" . $commande['idstand'] . "</p>\n"
-                  . "<p>Cliquez sur le lien ci-dessous pour confirmer votre commande :</p>\n"
-                  . "<p><a href='" . $confirmationLink . "'>Confirmer ma commande</a></p>\n"
-                  . "<p>Si vous n'avez pas demandé cette confirmation, ignorez cet email.</p>\n"
+                  . "<p>Cliquez sur le lien ci-dessous pour accéder au paiement de votre commande :</p>\n"
+                  . "<p><a href='" . $paymentLink . "'>Payer ma commande</a></p>\n"
+                  . "<p>Si vous n'avez pas demandé cette action, ignorez cet email.</p>\n"
                   . "<p>Merci pour votre confiance.</p>";
             Mailer::send($userEmail, $subject, $body);
         }
@@ -72,7 +77,11 @@ if (isset($_GET['confirmed'])) {
 }
 
 if (isset($_GET['confirmation_sent'])) {
-    $deleteMessage = 'Un email de confirmation vous a été envoyé. Veuillez vérifier votre boîte mail et cliquer sur le lien pour confirmer votre commande.';
+    $deleteMessage = 'Un email de paiement vous a été envoyé. Veuillez vérifier votre boîte mail et cliquer sur le lien pour payer votre commande.';
+}
+
+if (isset($_GET['success'])) {
+    $deleteMessage = htmlspecialchars($_GET['success']);
 }
 
 $list = $commandeC->listCommandes();
@@ -129,12 +138,26 @@ $totalAmount = 0;
 foreach ($commandes as $commande) {
     $totalAmount += (float) ($commande['montanttotale'] ?? 0);
 }
+
+function formatInitialCountdown($seconds) {
+    if ($seconds <= 0) {
+        return '00m 00s';
+    }
+    if ($seconds <= 60) {
+        $minutes = floor($seconds / 60);
+        $secs = $seconds % 60;
+        return $minutes . 'm ' . str_pad($secs, 2, '0', STR_PAD_LEFT) . 's';
+    }
+    $hours = floor($seconds / 3600);
+    $minutes = floor(($seconds % 3600) / 60);
+    return $hours . 'h ' . str_pad($minutes, 2, '0', STR_PAD_LEFT) . 'm';
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mes commandes</title>
+    <title><?php echo t('cmd_title'); ?> — BarchaThon</title>
     <style>
         body { margin:0; font-family:"Segoe UI",sans-serif; background:linear-gradient(180deg,#fff8e7,#eef8f8); color:#102a43; }
         .wrap { width:min(1200px, calc(100% - 32px)); margin:24px auto 40px; }
@@ -179,6 +202,8 @@ foreach ($commandes as $commande) {
         .badge-nonvalide { background:#fee2e2; color:#991b1b; }
         .badge-waiting { background:#fef9c3; color:#92400e; }
         .badge-pending { background:#f8fafc; color:#475569; }
+        .countdown { display:inline-flex; align-items:center; gap:4px; color:#0f766e; font-weight:700; }
+        .countdown.expiring { color:#b91c1c; }
         .actions { display:flex; gap:10px; flex-wrap:wrap; }
         .btn-warning { background:#fff7ed; color:#b45309; border:1px solid #fdba74; }
         .btn-delete { background:#fef2f2; color:#b91c1c; border:1px solid #fca5a5; }
@@ -200,7 +225,7 @@ foreach ($commandes as $commande) {
 
     <div class="wrap">
         <section class="hero">
-            <h1>Historique de mes commandes</h1>
+            <h1><?php echo t('cmd_title'); ?></h1>
             <div class="stats-row">
                 <div class="stat-card">
                     <strong><?php echo $confirmedCount; ?></strong>
@@ -256,6 +281,7 @@ foreach ($commandes as $commande) {
                             <th><a class="table-sort" href="<?php echo '?'.http_build_query(array_merge($_GET, ['sort_by' => 'date', 'sort_order' => $sort_by === 'date' ? $nextOrder : 'desc'])); ?>">Date <?php echo $dateArrow; ?></a></th>
                             <th><a class="table-sort" href="<?php echo '?'.http_build_query(array_merge($_GET, ['sort_by' => 'montant', 'sort_order' => $sort_by === 'montant' ? $nextOrder : 'desc'])); ?>">Montant <?php echo $montantArrow; ?></a></th>
                             <th>Status</th>
+                            <th>Temps restant</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -290,6 +316,14 @@ foreach ($commandes as $commande) {
                                     break;
                             }
                         ?>
+                        <?php
+                            $expiryTimestamp = strtotime($commande['datecommande']) + 86400;
+                            $remainingSeconds = max(0, $expiryTimestamp - time());
+                            $countdownText = '-';
+                            if (strtolower(trim($commande['statut'])) === 'en cours') {
+                                $countdownText = formatInitialCountdown($remainingSeconds);
+                            }
+                        ?>
                         <tr>
                             <td>#<?php echo $commande['idcommande']; ?></td>
                             <td><?php echo $commande['idstand']; ?></td>
@@ -297,23 +331,36 @@ foreach ($commandes as $commande) {
                             <td><strong><?php echo number_format($commande['montanttotale'], 2, ',', ' ') . ' TND'; ?></strong></td>
                             <td><span class="badge <?php echo $statusClass; ?>"><?php echo $statusLabel; ?></span></td>
                             <td>
+                                <?php if (strtolower(trim($commande['statut'])) === 'en cours'): ?>
+                                    <span class="countdown" data-expiry="<?php echo $expiryTimestamp; ?>"><?php echo htmlspecialchars($countdownText); ?></span>
+                                <?php else: ?>
+                                    <span class="countdown"></span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
                                 <div class="actions">
                                     <a class="btn-inline btn-details" href="orderDetails.php?id=<?php echo $commande['idcommande']; ?>">
                                         Voir détails
                                     </a>
                                     <?php if (strtolower($commande['statut']) === 'en cours'): ?>
-                                    <form method="post" style="display:inline-flex; margin:0;" onsubmit="return handleConfirmSubmit(this);">
-                                        <input type="hidden" name="confirm_order_id" value="<?php echo htmlspecialchars($commande['idcommande']); ?>">
-                                        <button type="submit" class="btn-inline btn-edit confirm-button" data-label="Confirmer" onclick="return confirm('Confirmer cette commande ? Vous recevrez un email avec un lien de confirmation.');">
-                                            <span class="confirm-label">Confirmer</span>
-                                        </button>
-                                    </form>
-                                    <form method="post" style="display:inline-flex; margin:0;">
-                                        <input type="hidden" name="delete_order_id" value="<?php echo htmlspecialchars($commande['idcommande']); ?>">
-                                        <button type="submit" class="btn-inline btn-delete" onclick="return confirm('Supprimer cette commande ?');">
-                                            Supprimer
-                                        </button>
-                                    </form>
+                                        <?php if (isOrganisateur()): ?>
+                                            <form method="post" style="display:inline-flex; margin:0;" onsubmit="return handleConfirmSubmit(this);">
+                                                <input type="hidden" name="confirm_order_id" value="<?php echo htmlspecialchars($commande['idcommande']); ?>">
+                                                <button type="submit" class="btn-inline btn-edit confirm-button" data-label="Envoyer un lien de paiement" onclick="return confirm('Envoyer un email de paiement à l’utilisateur ?');">
+                                                    <span class="confirm-label">Envoyer lien de paiement</span>
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <a class="btn-inline btn-edit" href="paiement.php?type=commande&id=<?php echo $commande['idcommande']; ?>&montant=<?php echo urlencode($commande['montanttotale']); ?>&stand_id=<?php echo urlencode($commande['idstand']); ?>">
+                                                Payer
+                                            </a>
+                                        <?php endif; ?>
+                                        <form method="post" style="display:inline-flex; margin:0;">
+                                            <input type="hidden" name="delete_order_id" value="<?php echo htmlspecialchars($commande['idcommande']); ?>">
+                                            <button type="submit" class="btn-inline btn-delete" onclick="return confirm('Supprimer cette commande ?');">
+                                                Supprimer
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
                                     <?php if (strtolower($commande['statut']) === 'en attente de validation'): ?>
                                     <a class="btn-inline btn-edit" href="standDetails.php?id=<?php echo $commande['idstand']; ?>&amp;stand=<?php echo $commande['idstand']; ?>&amp;order=<?php echo $commande['idcommande']; ?>">
@@ -389,6 +436,40 @@ foreach ($commandes as $commande) {
             }, 1000);
         }
 
+        function formatCountdown(seconds) {
+            if (seconds <= 0) {
+                return '00m 00s';
+            }
+            if (seconds <= 60) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${minutes}m ${secs.toString().padStart(2, '0')}s`;
+            }
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+        }
+
+        function updateCountdowns() {
+            const now = Math.floor(Date.now() / 1000);
+            document.querySelectorAll('.countdown[data-expiry]').forEach(el => {
+                const expiry = parseInt(el.dataset.expiry, 10);
+                if (isNaN(expiry)) return;
+                const remaining = expiry - now;
+                el.textContent = formatCountdown(remaining);
+                if (remaining <= 60) {
+                    el.classList.add('expiring');
+                } else {
+                    el.classList.remove('expiring');
+                }
+            });
+        }
+
+        function startCountdowns() {
+            updateCountdowns();
+            setInterval(updateCountdowns, 1000);
+        }
+
         function handleConfirmSubmit(form) {
             setConfirmCooldown();
             startConfirmCountdown();
@@ -397,6 +478,7 @@ foreach ($commandes as $commande) {
 
         document.addEventListener('DOMContentLoaded', () => {
             startConfirmCountdown();
+            startCountdowns();
         });
     </script>
 </body>
