@@ -214,6 +214,53 @@ class UserController {
         }
     }
 
+    public function incrementNbreCommande($id) {
+        $db = config::getConnexion();
+        try {
+            $stmt = $db->prepare("UPDATE `user` SET nbre_commande = COALESCE(nbre_commande, 0) + 1 WHERE id_user = :id");
+            $stmt->execute(['id' => $id]);
+        } catch (Exception $e) {
+            error_log('Error incrementing nbre_commande: ' . $e->getMessage());
+        }
+    }
+
+    public function updateLoginStreak($id) {
+        $db = config::getConnexion();
+        try {
+            $stmt = $db->prepare("SELECT last_login_date, consecutive_logins FROM `user` WHERE id_user = :id");
+            $stmt->execute(['id' => $id]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) {
+                $lastLogin = $row['last_login_date'];
+                $streak = (int)$row['consecutive_logins'];
+                $today = date('Y-m-d');
+                $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+                if ($lastLogin !== $today) {
+                    if ($lastLogin === $yesterday) {
+                        $streak++;
+                    } else {
+                        $streak = 1;
+                    }
+                    $update = $db->prepare("UPDATE `user` SET last_login_date = :today, consecutive_logins = :streak WHERE id_user = :id");
+                    $update->execute(['today' => $today, 'streak' => $streak, 'id' => $id]);
+                }
+            }
+        } catch (Exception $e) {
+            error_log('Error updating login streak: ' . $e->getMessage());
+        }
+    }
+
+    public function clearPendingDiscount($id) {
+        $db = config::getConnexion();
+        try {
+            $stmt = $db->prepare("UPDATE `user` SET pending_discount = 0 WHERE id_user = :id");
+            $stmt->execute(['id' => $id]);
+        } catch (Exception $e) {
+            error_log('Error clearing pending discount: ' . $e->getMessage());
+        }
+    }
+
     public function showUser($id) {
         $sql = "SELECT * FROM `user` WHERE id_user = :id";
         $db = config::getConnexion();

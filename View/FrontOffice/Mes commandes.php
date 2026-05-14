@@ -139,19 +139,6 @@ foreach ($commandes as $commande) {
     $totalAmount += (float) ($commande['montanttotale'] ?? 0);
 }
 
-function formatInitialCountdown($seconds) {
-    if ($seconds <= 0) {
-        return '00m 00s';
-    }
-    if ($seconds <= 60) {
-        $minutes = floor($seconds / 60);
-        $secs = $seconds % 60;
-        return $minutes . 'm ' . str_pad($secs, 2, '0', STR_PAD_LEFT) . 's';
-    }
-    $hours = floor($seconds / 3600);
-    $minutes = floor(($seconds % 3600) / 60);
-    return $hours . 'h ' . str_pad($minutes, 2, '0', STR_PAD_LEFT) . 'm';
-}
 ?>
 <!DOCTYPE html>
 <html lang="fr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -260,7 +247,7 @@ function formatInitialCountdown($seconds) {
                 </form>
                 <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
                     <span style="font-weight:700; color:#102a43;">Statut :</span>
-                    <?php $statusOptions = ['all' => 'Toutes', 'en cours' => 'En cours', 'confirmé' => 'Confirmé']; ?>
+                    <?php $statusOptions = ['all' => 'Toutes', 'confirmé' => 'Confirmé', 'non valide' => 'Non valide']; ?>
                     <?php foreach ($statusOptions as $value => $label): ?>
                         <a class="btn <?php echo $statusFilter === $value ? 'btn-edit' : 'btn-secondary'; ?>" href="<?php echo '?'.http_build_query(array_merge($_GET, ['status' => $value])); ?>"><?php echo $label; ?></a>
                     <?php endforeach; ?>
@@ -278,10 +265,12 @@ function formatInitialCountdown($seconds) {
                         <tr>
                             <th>ID</th>
                             <th>Numero du stand</th>
+                            <th>Marathon</th>
+                            <th>Parcours</th>
                             <th><a class="table-sort" href="<?php echo '?'.http_build_query(array_merge($_GET, ['sort_by' => 'date', 'sort_order' => $sort_by === 'date' ? $nextOrder : 'desc'])); ?>">Date <?php echo $dateArrow; ?></a></th>
                             <th><a class="table-sort" href="<?php echo '?'.http_build_query(array_merge($_GET, ['sort_by' => 'montant', 'sort_order' => $sort_by === 'montant' ? $nextOrder : 'desc'])); ?>">Montant <?php echo $montantArrow; ?></a></th>
+                            <th>Remise</th>
                             <th>Status</th>
-                            <th>Temps restant</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -316,27 +305,20 @@ function formatInitialCountdown($seconds) {
                                     break;
                             }
                         ?>
-                        <?php
-                            $expiryTimestamp = strtotime($commande['datecommande']) + 86400;
-                            $remainingSeconds = max(0, $expiryTimestamp - time());
-                            $countdownText = '-';
-                            if (strtolower(trim($commande['statut'])) === 'en cours') {
-                                $countdownText = formatInitialCountdown($remainingSeconds);
-                            }
-                        ?>
                         <tr>
-                            <td>#<?php echo $commande['idcommande']; ?></td>
+                            <td><?php echo $commande['idcommande']; ?></td>
                             <td><?php echo $commande['idstand']; ?></td>
+                            <?php 
+                                $marathonParcoursInfo = $commandeC->getMarathonAndParcoursByStand($commande['idstand']);
+                                $nomMarathon = $marathonParcoursInfo && $marathonParcoursInfo['nom_marathon'] ? $marathonParcoursInfo['nom_marathon'] : 'N/A';
+                                $nomParcours = $marathonParcoursInfo && $marathonParcoursInfo['nom_parcours'] ? $marathonParcoursInfo['nom_parcours'] : 'N/A';
+                            ?>
+                            <td><?php echo htmlspecialchars($nomMarathon); ?></td>
+                            <td><?php echo htmlspecialchars($nomParcours); ?></td>
                             <td><?php echo date('d/m/Y H:i', strtotime($commande['datecommande'])); ?></td>
                             <td><strong><?php echo number_format($commande['montanttotale'], 2, ',', ' ') . ' TND'; ?></strong></td>
+                            <td><?php echo (int)($commande['remise'] ?? 0); ?> %</td>
                             <td><span class="badge <?php echo $statusClass; ?>"><?php echo $statusLabel; ?></span></td>
-                            <td>
-                                <?php if (strtolower(trim($commande['statut'])) === 'en cours'): ?>
-                                    <span class="countdown" data-expiry="<?php echo $expiryTimestamp; ?>"><?php echo htmlspecialchars($countdownText); ?></span>
-                                <?php else: ?>
-                                    <span class="countdown"></span>
-                                <?php endif; ?>
-                            </td>
                             <td>
                                 <div class="actions">
                                     <a class="btn-inline btn-details" href="orderDetails.php?id=<?php echo $commande['idcommande']; ?>">
@@ -384,101 +366,8 @@ function formatInitialCountdown($seconds) {
     </div>
 
     <script>
-        const confirmCooldownKey = 'barchathon_confirm_cooldown';
-        const confirmCooldownSeconds = 30;
-
-        function setConfirmCooldown() {
-            const expiry = Date.now() + confirmCooldownSeconds * 1000;
-            localStorage.setItem(confirmCooldownKey, expiry.toString());
-        }
-
-        function getConfirmCooldownRemaining() {
-            const stored = localStorage.getItem(confirmCooldownKey);
-            if (!stored) return 0;
-            const expiry = parseInt(stored, 10);
-            if (isNaN(expiry)) return 0;
-            const remaining = Math.ceil((expiry - Date.now()) / 1000);
-            return remaining > 0 ? remaining : 0;
-        }
-
-        function updateConfirmButtons() {
-            const remaining = getConfirmCooldownRemaining();
-            const buttons = document.querySelectorAll('.confirm-button');
-            buttons.forEach(button => {
-                const label = button.getAttribute('data-label') || 'Confirmer';
-                if (remaining > 0) {
-                    button.disabled = true;
-                    button.classList.add('btn-disabled');
-                    button.classList.remove('btn-edit');
-                    button.querySelector('.confirm-label').textContent = `${label} (${remaining}s)`;
-                } else {
-                    button.disabled = false;
-                    button.classList.remove('btn-disabled');
-                    button.classList.add('btn-edit');
-                    button.querySelector('.confirm-label').textContent = label;
-                }
-            });
-            return remaining;
-        }
-
-        function startConfirmCountdown() {
-            let remaining = getConfirmCooldownRemaining();
-            if (remaining <= 0) return;
-            updateConfirmButtons();
-            const interval = setInterval(() => {
-                remaining = getConfirmCooldownRemaining();
-                if (remaining <= 0) {
-                    clearInterval(interval);
-                    updateConfirmButtons();
-                    return;
-                }
-                updateConfirmButtons();
-            }, 1000);
-        }
-
-        function formatCountdown(seconds) {
-            if (seconds <= 0) {
-                return '00m 00s';
-            }
-            if (seconds <= 60) {
-                const minutes = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${minutes}m ${secs.toString().padStart(2, '0')}s`;
-            }
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
-        }
-
-        function updateCountdowns() {
-            const now = Math.floor(Date.now() / 1000);
-            document.querySelectorAll('.countdown[data-expiry]').forEach(el => {
-                const expiry = parseInt(el.dataset.expiry, 10);
-                if (isNaN(expiry)) return;
-                const remaining = expiry - now;
-                el.textContent = formatCountdown(remaining);
-                if (remaining <= 60) {
-                    el.classList.add('expiring');
-                } else {
-                    el.classList.remove('expiring');
-                }
-            });
-        }
-
-        function startCountdowns() {
-            updateCountdowns();
-            setInterval(updateCountdowns, 1000);
-        }
-
-        function handleConfirmSubmit(form) {
-            setConfirmCooldown();
-            startConfirmCountdown();
-            return true;
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            startConfirmCountdown();
-            startCountdowns();
+            // Initialization if needed
         });
     </script>
 </body>

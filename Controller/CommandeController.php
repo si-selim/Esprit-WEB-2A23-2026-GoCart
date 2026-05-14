@@ -60,7 +60,7 @@ class CommandeController {
         // Récupérer l'idorganisateur basé sur l'idstand
         $idorganisateur = $this->getOrganisateurByStand($commande->getIdstand());
         
-        $sql = "INSERT INTO commande (idutilisateur, idstand, idorganisateur, datecommande, statut, montanttotale, modePaiement) VALUES (:idutilisateur, :idstand, :idorganisateur, :datecommande, :statut, :montanttotal, :modePaiement)";
+        $sql = "INSERT INTO commande (idutilisateur, idstand, idorganisateur, datecommande, statut, montanttotale, modePaiement, remise) VALUES (:idutilisateur, :idstand, :idorganisateur, :datecommande, :statut, :montanttotal, :modePaiement, :remise)";
         $db = config::getConnexion();
         try {
             $query = $db->prepare($sql);
@@ -71,7 +71,8 @@ class CommandeController {
                 'datecommande' => $commande->getDatecommande(),
                 'statut' => $commande->getStatut(),
                 'montanttotal' => $commande->getMontanttotal(),
-                'modePaiement' => $commande->getModePaiement()
+                'modePaiement' => $commande->getModePaiement(),
+                'remise' => $commande->getRemise()
             ]);
             return $db->lastInsertId();
         } catch (Exception $e) {
@@ -102,7 +103,8 @@ class CommandeController {
                     datecommande = :datecommande,
                     statut = :statut,
                     montanttotale = :montanttotal,
-                    modePaiement = :modePaiement
+                    modePaiement = :modePaiement,
+                    remise = :remise
                 WHERE idcommande = :id'
             );
             $query->execute([
@@ -113,7 +115,8 @@ class CommandeController {
                 'datecommande' => $commande->getDatecommande(),
                 'statut' => $commande->getStatut(),
                 'montanttotal' => $commande->getMontanttotal(),
-                'modePaiement' => $commande->getModePaiement()
+                'modePaiement' => $commande->getModePaiement(),
+                'remise' => $commande->getRemise()
             ]);
         } catch (PDOException $e) {
             error_log('CommandeController::add error: ' . $e->getMessage());
@@ -205,6 +208,27 @@ class CommandeController {
             return $result ? $result['id_user'] : null;
         } catch (Exception $e) {
             error_log('Error getOrganisateurByStand: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Récupère le nom du marathon et le nom du parcours basé sur l'ID du stand
+     */
+    public function getMarathonAndParcoursByStand($idStand) {
+        $sql = "SELECT m.nom_marathon, p.nom_parcours 
+                FROM stand s 
+                LEFT JOIN parcours p ON s.ID_parcours = p.id_parcours 
+                LEFT JOIN marathon m ON p.id_marathon = m.id_marathon 
+                WHERE s.ID_stand = :id_stand";
+        
+        $db = config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute(['id_stand' => $idStand]);
+            return $query->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log('Error getMarathonAndParcoursByStand: ' . $e->getMessage());
             return null;
         }
     }

@@ -58,6 +58,7 @@ $_user = isset($user) ? $user : (function_exists('getCurrentUser') ? (getCurrent
         <a class="side-link <?php echo $_sidebarActive==='produits'?'active':''; ?>" href="dashboard.php?tab=produits"><?php echo t('bo_produits'); ?></a>
         <a class="side-link <?php echo $_sidebarActive==='commandes'?'active':''; ?>" href="dashboard.php?tab=commandes"><?php echo t('bo_commandes'); ?></a>
         <a class="side-link <?php echo $_sidebarActive==='sponsors'?'active':''; ?>" href="dashboard.php?tab=sponsors"><?php echo t('bo_sponsors'); ?></a>
+        <a class="side-link <?php echo $_sidebarActive==='objectifs'?'active':''; ?>" href="objectifs.php">Objectifs & Récompenses</a>
         <a class="side-link <?php echo $_sidebarActive==='inscriptions'?'active':''; ?>" href="dashboard.php?tab=inscriptions"><?php echo t('bo_inscriptions'); ?></a>
         <a class="side-link <?php echo $_sidebarActive==='inscriptions_list'?'active':''; ?>" href="dashboard.php?tab=inscriptions_list"><?php echo t('bo_inscriptions_list'); ?></a>
         <a class="side-link" href="../FrontOffice/accueil.php"><?php echo t('bo_back'); ?></a>

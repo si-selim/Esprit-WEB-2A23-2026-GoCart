@@ -1,6 +1,7 @@
 <?php
 include '../../Controller/CommandeController.php';
 include '../../Controller/LigneCommandeController.php';
+include '../../Controller/ProduitController.php';
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/partials/session.php';
@@ -9,6 +10,7 @@ $currentPage = 'orderDetails';
 
 $commandeC = new CommandeController();
 $ligneC = new LigneCommandeController();
+$produitC = new ProduitController();
 $id = isset($_GET['id']) ? $_GET['id'] : null;
 
 if (!$id) {
@@ -144,7 +146,9 @@ $lignes = $lignesQuery->fetchAll();
             </div>
             <div style="display:flex; gap:10px; align-items:center; justify-content:flex-end;">
             <?php if (strtolower(trim($commande['statut'])) === 'confirmé' || strtolower(trim($commande['statut'])) === 'validée' || strtolower(trim($commande['statut'])) === 'validé'): ?>
-                <button class="btn btn-details" onclick="window.print();">Imprimer</button>
+                <a href="export_commande_pdf.php?id=<?php echo htmlspecialchars($id); ?>" target="_blank" class="btn btn-details">
+                    <i class="fas fa-file-pdf"></i> Exporter PDF
+                </a>
             <?php endif; ?>
         </div>
         <div class="table-wrap">
@@ -153,7 +157,7 @@ $lignes = $lignesQuery->fetchAll();
                     <thead>
                         <tr>
                             <th>ID ligne</th>
-                            <th>ID produit</th>
+                            <th>Produit</th>
                             <th>Quantité</th>
                             <th>Prix unitaire</th>
                             <th>Total ligne</th>
@@ -168,7 +172,12 @@ $lignes = $lignesQuery->fetchAll();
                         ?>
                         <tr>
                             <td><?php echo htmlspecialchars($ligne['idligne']); ?></td>
-                            <td><?php echo htmlspecialchars($ligne['idproduit']); ?></td>
+                            <td>
+                                <?php
+                                $prod = $produitC->getProduit($ligne['idproduit']);
+                                echo $prod ? htmlspecialchars($prod['nom_produit']) : 'Produit inconnu (' . htmlspecialchars($ligne['idproduit']) . ')';
+                                ?>
+                            </td>
                             <td><?php echo htmlspecialchars($ligne['quantite']); ?></td>
                             <td><?php echo number_format($ligne['prixunitaire'], 2, ',', ' ') . ' TND'; ?></td>
                             <td><?php echo number_format($totalLigne, 2, ',', ' ') . ' TND'; ?></td>

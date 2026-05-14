@@ -36,8 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'taille'   => $row['taille'],
             ];
             if ($row['role'] === 'admin') {
+                $ctrl->updateLoginStreak($row['id_user']);
                 header('Location: ../BackOffice/dashboard.php');
             } else {
+                $ctrl->updateLoginStreak($row['id_user']);
                 header('Location: accueil.php');
             }
             exit;

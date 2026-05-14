@@ -245,7 +245,8 @@ $_otherLang   = $_currentLang === 'fr' ? 'en' : 'fr';
 
             <?php elseif ($role === 'participant'): ?>
                 <a class="fo-link <?php echo $currentPage==='sponsors'?'active':''; ?>" href="<?php echo $_frontBase; ?>voirSponsors.php"><?php echo t('nav_sponsors'); ?></a>
-                <a class="fo-link" href="<?php echo $_frontBase; ?>Mes commandes.php"><?php echo t('nav_my_orders'); ?></a>
+                <a class="fo-link <?php echo $currentPage==='objectives'?'active':''; ?>" href="<?php echo $_frontBase; ?>objectives.php">Objectifs & Récompenses</a>
+                <a class="fo-link <?php echo $currentPage==='orders'?'active':''; ?>" href="<?php echo $_frontBase; ?>Mes commandes.php"><?php echo t('nav_my_orders'); ?></a>
                 <a class="fo-link <?php echo $currentPage==='profile'?'active':''; ?>" href="<?php echo $_frontBase; ?>profile.php"><?php echo t('nav_my_profile'); ?></a>
                 <span class="fo-user"><?php echo htmlspecialchars($user['nom']); ?> <span class="fo-role-badge"><?php echo t('role_participant'); ?></span></span>
                 <a class="fo-link" href="<?php echo $_frontBase; ?>logout.php"><?php echo t('nav_logout'); ?></a>

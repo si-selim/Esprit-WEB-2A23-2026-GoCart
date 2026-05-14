@@ -8,6 +8,7 @@ class Commande {
     private ?string $statut;
     private ?float $montanttotal;
     private ?string $modePaiement;
+    private ?int $remise;
 
     //Constructor
     public function __construct(
@@ -18,7 +19,8 @@ class Commande {
         ?string $datecommande,
         ?string $statut,
         ?float $montanttotal,
-        ?string $modePaiement = null
+        ?string $modePaiement = null,
+        ?int $remise = 0
     ) {
         $this->idcommande = $idcommande;
         $this->idutilisateur = $idutilisateur;
@@ -28,11 +30,12 @@ class Commande {
         $this->statut = $statut;
         $this->montanttotal = $montanttotal;
         $this->modePaiement = $modePaiement;
+        $this->remise = $remise;
     }
 
     public function show() {
         echo "<table border='1' cellpadding='5'>";
-        echo "<tr><th>ID Commande</th><th>ID Utilisateur</th><th>ID Stand</th><th>ID Organisateur</th><th>Date Commande</th><th>Statut</th><th>Montant Total</th></tr>";
+        echo "<tr><th>ID Commande</th><th>ID Utilisateur</th><th>ID Stand</th><th>ID Organisateur</th><th>Date Commande</th><th>Statut</th><th>Montant Total</th><th>Remise</th></tr>";
         echo "<tr>";
         echo "<td>{$this->idcommande}</td>";
         echo "<td>{$this->idutilisateur}</td>";
@@ -41,6 +44,7 @@ class Commande {
         echo "<td>{$this->datecommande}</td>";
         echo "<td>{$this->statut}</td>";
         echo "<td>" . number_format($this->montanttotal, 2) . "</td>";
+        echo "<td>{$this->remise} %</td>";
         echo "</tr>";
         echo "</table>";
     }
@@ -108,6 +112,14 @@ class Commande {
 
     public function setModePaiement(?string $modePaiement): void {
         $this->modePaiement = $modePaiement;
+    }
+
+    public function getRemise(): ?int {
+        return $this->remise;
+    }
+
+    public function setRemise(?int $remise): void {
+        $this->remise = $remise;
     }
 }
 ?>

@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../Controller/CommandeController.php';
 require_once __DIR__ . '/../../Controller/LigneCommandeController.php';
 require_once __DIR__ . '/../../Controller/ProduitController.php';
 require_once __DIR__ . '/../../Controller/Mailer.php';
+require_once __DIR__ . '/../../Controller/UserController.php';
 require_once __DIR__ . '/../../StripePayment.php';
 
 header('Content-Type: application/json');
@@ -44,6 +45,24 @@ if ($existingOrder && !$existingOrderOwner) {
     http_response_code(403);
     echo json_encode(['error' => 'Commande invalide.']);
     exit;
+}
+
+$userCtrl = new UserController();
+$dbUser = $userCtrl->showUser($userId);
+$nbreCommande = isset($dbUser['nbre_commande']) ? (int)$dbUser['nbre_commande'] : 0;
+$pendingDiscount = isset($dbUser['pending_discount']) ? (int)$dbUser['pending_discount'] : 0;
+
+$totalDiscountPercent = 0;
+if ($type === 'commande') {
+    if ($nbreCommande === 0) {
+        $totalDiscountPercent += 10;
+    }
+    if ($pendingDiscount > 0) {
+        $totalDiscountPercent += $pendingDiscount;
+    }
+    if ($totalDiscountPercent > 0) {
+        $montant = $montant * (1 - ($totalDiscountPercent / 100));
+    }
 }
 
 if (!$paymentMethodId || !$type || !$montant || ($type === 'marathon' && !$id)) {
@@ -118,9 +137,31 @@ try {
             $ligneC = new LigneCommandeController();
             $prodCtrl = new ProduitController();
 
-            if ($existingOrder && $existingOrderOwner && strtolower(trim($existingOrder['statut'])) === 'en cours') {
-                $commandeC->updateCommandePayment($id, 'confirmé', 'stripe');
+            $commande = new Commande(null, $userId, $stand_id ?: null, null, date('Y-m-d H:i:s'), 'confirmé', $montant, 'stripe', $totalDiscountPercent);
+            $newCommandeId = $commandeC->addCommande($commande);
+
+            if ($newCommandeId) {
+                if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
+                    foreach ($_SESSION['cart'] as $item) {
+                        $prixUnitaire = $item['prix'];
+                        if ($type === 'commande' && $totalDiscountPercent > 0) {
+                            $prixUnitaire = $prixUnitaire * (1 - ($totalDiscountPercent / 100));
+                        }
+                        $ligne = new LigneCommande(null, $newCommandeId, $item['idproduit'], $item['quantite'], $prixUnitaire);
+                        $ligneC->addLigneCommande($ligne);
+                        $prodCtrl->decrementStock($item['idproduit'], $item['quantite']);
+                    }
+                }
+
+                $userCtrl = new UserController();
+                $userCtrl->incrementNbreCommande($userId);
+                if ($totalDiscountPercent > 0 && $pendingDiscount > 0) {
+                    $userCtrl->clearPendingDiscount($userId);
+                }
+
+                $_SESSION['cart'] = [];
                 $_SESSION['success_message'] = '✅ Paiement confirmé !';
+
                 $userEmail = $user['email'] ?? '';
                 if ($userEmail) {
                     $subject = 'Confirmation de paiement - BarchaThon';
@@ -136,39 +177,8 @@ try {
                     'redirect' => 'Mes commandes.php'
                 ]);
             } else {
-                $commande = new Commande(null, $userId, $stand_id ?: null, null, date('Y-m-d H:i:s'), 'confirmé', $montant, 'stripe');
-                $newCommandeId = $commandeC->addCommande($commande);
-
-                if ($newCommandeId) {
-                    if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
-                        foreach ($_SESSION['cart'] as $item) {
-                            $ligne = new LigneCommande(null, $newCommandeId, $item['idproduit'], $item['quantite'], $item['prix']);
-                            $ligneC->addLigneCommande($ligne);
-                            $prodCtrl->decrementStock($item['idproduit'], $item['quantite']);
-                        }
-                    }
-
-                    $_SESSION['cart'] = [];
-                    $_SESSION['success_message'] = '✅ Paiement confirmé !';
-
-                    $userEmail = $user['email'] ?? '';
-                    if ($userEmail) {
-                        $subject = 'Confirmation de paiement - BarchaThon';
-                        $body = "<p>Bonjour,</p>\n"
-                              . "<p>Votre paiement de <strong>" . number_format($montant, 2, ',', ' ') . " TND</strong> a bien été enregistré.</p>\n"
-                              . "<p>Vous pouvez consulter votre commande et vos détails sur la page <a href='https://{$_SERVER['HTTP_HOST']}/Integ-standProduit/View/FrontOffice/Mes%20commandes.php'>Voir mes commandes</a>.</p>\n"
-                              . "<p>Merci pour votre confiance.</p>";
-                        Mailer::send($userEmail, $subject, $body);
-                    }
-
-                    echo json_encode([
-                        'success' => true,
-                        'redirect' => 'Mes commandes.php'
-                    ]);
-                } else {
-                    http_response_code(500);
-                    echo json_encode(['error' => 'Erreur lors de la création de la commande']);
-                }
+                http_response_code(500);
+                echo json_encode(['error' => 'Erreur lors de la création de la commande']);
             }
         } else {
             http_response_code(400);

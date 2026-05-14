@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../Controller/MarathonController.php';
 require_once __DIR__ . '/../../Controller/CommandeController.php';
 require_once __DIR__ . '/../../Controller/LigneCommandeController.php';
 require_once __DIR__ . '/../../Controller/ProduitController.php';
+require_once __DIR__ . '/../../Controller/UserController.php';
 
 $user = getCurrentUser();
 if (!$user) {
@@ -135,12 +136,19 @@ if ($type === 'commande') {
         exit;
     }
 
-    if ($action === 'later') {
-        if ($existingOrder && $existingOrderOwner && strtolower(trim($existingOrder['statut'])) === 'en cours') {
-            $commandeC->updateCommandePayment($id, 'en cours', 'en attente');
-            $success = true;
-            $message = 'Commande conservée en attente de paiement. Vous pouvez la régler depuis Mes commandes.';
-        } else {
+    $userCtrl = new UserController();
+    $dbUser = $userCtrl->showUser($userId);
+    $nbreCommande = isset($dbUser['nbre_commande']) ? (int)$dbUser['nbre_commande'] : 0;
+    if ($nbreCommande === 0) {
+        $montant = $montant * 0.90;
+    }
+
+
+        $paiement_reussi = true; // Simulation
+        $status = 'confirmé';
+        $mode = $methode;
+
+        if ($paiement_reussi) {
             $cartValid = true;
 
             if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
@@ -160,76 +168,33 @@ if ($type === 'commande') {
             }
 
             if ($cartValid) {
-                $commande = new Commande(null, $userId, $stand_id ?: null, null, date('Y-m-d H:i:s'), 'en cours', $montant, 'en attente');
+                $commande = new Commande(null, $userId, $stand_id ?: null, null, date('Y-m-d H:i:s'), $status, $montant, $mode);
                 $newCommandeId = $commandeC->addCommande($commande);
 
                 if ($newCommandeId) {
                     foreach ($_SESSION['cart'] as $item) {
-                        $ligne = new LigneCommande(null, $newCommandeId, $item['idproduit'], $item['quantite'], $item['prix']);
+                        $prixUnitaire = $item['prix'];
+                        if ($type === 'commande' && $nbreCommande === 0) {
+                            $prixUnitaire = $prixUnitaire * 0.90;
+                        }
+                        $ligne = new LigneCommande(null, $newCommandeId, $item['idproduit'], $item['quantite'], $prixUnitaire);
                         $ligneC->addLigneCommande($ligne);
                         $prodCtrl->decrementStock($item['idproduit'], $item['quantite']);
                     }
 
+                    $userCtrl = new UserController();
+                    $userCtrl->incrementNbreCommande($userId);
+
                     $_SESSION['cart'] = [];
                     $success = true;
-                    $message = 'Votre commande a bien été ajoutée à Mes commandes avec le statut « en cours ». Vous avez 24h pour la finaliser.';
+                    $message = 'Paiement de la commande confirmé et validé.';
                 } else {
                     $message = 'Erreur lors de la création de la commande.';
-                }
-            }
-        }
-    } else {
-        $paiement_reussi = true; // Simulation
-        $status = 'confirmé';
-        $mode = $methode;
-
-        if ($paiement_reussi) {
-            if ($existingOrder && $existingOrderOwner && strtolower(trim($existingOrder['statut'])) === 'en cours') {
-                $commandeC->updateCommandePayment($id, $status, $mode);
-                $success = true;
-                $message = 'Paiement de la commande confirmé et validé.';
-            } else {
-                $cartValid = true;
-
-                if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
-                    $cartValid = false;
-                    $message = 'Le panier est vide. Impossible de créer la commande.';
-                }
-
-                if ($cartValid) {
-                    foreach ($_SESSION['cart'] as $item) {
-                        $currentProduct = $prodCtrl->getProduit($item['idproduit']);
-                        if (!$currentProduct || !$currentProduct['en_out_stock'] || $currentProduct['qte_stock'] < $item['quantite']) {
-                            $cartValid = false;
-                            $message = 'Stock insuffisant pour l’un des produits du panier. Ajustez votre commande avant de payer.';
-                            break;
-                        }
-                    }
-                }
-
-                if ($cartValid) {
-                    $commande = new Commande(null, $userId, $stand_id ?: null, null, date('Y-m-d H:i:s'), $status, $montant, $mode);
-                    $newCommandeId = $commandeC->addCommande($commande);
-
-                    if ($newCommandeId) {
-                        foreach ($_SESSION['cart'] as $item) {
-                            $ligne = new LigneCommande(null, $newCommandeId, $item['idproduit'], $item['quantite'], $item['prix']);
-                            $ligneC->addLigneCommande($ligne);
-                            $prodCtrl->decrementStock($item['idproduit'], $item['quantite']);
-                        }
-
-                        $_SESSION['cart'] = [];
-                        $success = true;
-                        $message = 'Paiement de la commande confirmé et validé.';
-                    } else {
-                        $message = 'Erreur lors de la création de la commande.';
-                    }
                 }
             }
         } else {
             $message = 'Paiement échoué. Veuillez réessayer.';
         }
-    }
 
     if ($success) {
         header('Location: Mes commandes.php?success=' . urlencode($message));

@@ -15,7 +15,7 @@ define('C_GREY_R', 100);  define('C_GREY_G', 116);  define('C_GREY_B', 139);
 define('C_LINE_R', 226);  define('C_LINE_G', 232);  define('C_LINE_B', 240);
 
 // ── Chemin du logo (à adapter si besoin) ──────────────────────────────────
-define('LOGO_PATH', $_SERVER['DOCUMENT_ROOT'] . '/MARATHONS/logo.jpg');
+define('LOGO_PATH', __DIR__ . '/../assets/images/logo_barchathon.jpg');
 
 class BarchaPDF extends FPDF
 {

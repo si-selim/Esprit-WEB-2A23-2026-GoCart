@@ -20,6 +20,22 @@ if ($type === 'marathon' && $id <= 0) {
     exit;
 }
 
+require_once __DIR__ . '/../../Controller/UserController.php';
+$userCtrl = new UserController();
+$dbUser = $userCtrl->showUser($user['id_user'] ?? $user['id']);
+$nbreCommande = isset($dbUser['nbre_commande']) ? (int)$dbUser['nbre_commande'] : 0;
+$pendingDiscount = isset($dbUser['pending_discount']) ? (int)$dbUser['pending_discount'] : 0;
+
+$isFirstOrder = ($nbreCommande === 0 && $type === 'commande');
+$totalDiscountPercent = 0;
+
+if ($isFirstOrder) {
+    $totalDiscountPercent += 10;
+}
+if ($type === 'commande' && $pendingDiscount > 0) {
+    $totalDiscountPercent += $pendingDiscount;
+}
+
 $currentPage = 'paiement';
 ?>
 <!DOCTYPE html>
@@ -65,18 +81,23 @@ $currentPage = 'paiement';
         .message.success { background:#dcfce7; color:#166534; border:1px solid #86efac; }
         .message.error { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
 
-        #stripe-card-element { border: 2px solid #e5e7eb; border-radius: 12px; padding: 15px; background: #f9fafb; margin-bottom: 20px; }
-        #stripe-card-element.stripe-focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(15,118,110,0.1); }
+        #stripe-card-element { border: 2px solid #e5e7eb; border-radius: 16px; padding: 18px; background: #f9fafb; margin-bottom: 20px; transition: all 0.3s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        #stripe-card-element.stripe-focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(15,118,110,0.15); background: white; }
         
-        .stripe-form { display: none; margin-top: 24px; }
-        .stripe-form.active { display: block; }
-
-        .payment-details { display: none; margin-top: 18px; background: #f8fafb; border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; }
-        .payment-details.active { display: block; }
-        .payment-details label { display: block; font-weight: 700; margin-bottom: 10px; color: #102a43; }
-        .payment-details input { width: 100%; padding: 14px 16px; border: 1.5px solid #d9e2ec; border-radius: 12px; font-size: 0.95rem; margin-bottom: 12px; background: white; }
-        .payment-details small { color: #64748b; font-size: 0.88rem; }
-        .payment-details .info { color: #0f766e; font-size: 0.94rem; margin-top: 8px; }
+        .stripe-form { display: block; margin-top: 24px; }
+        
+        .secure-payment-info {
+            display: flex; align-items: center; justify-content: center; gap: 16px; 
+            background: linear-gradient(135deg, #f0fdf9, #ccfbf1); padding: 24px; 
+            border-radius: 20px; border: 1px solid #99f6e4; color: #0f766e; 
+            margin-bottom: 28px; box-shadow: 0 8px 24px rgba(20, 184, 166, 0.15);
+            transition: transform 0.2s ease;
+        }
+        .secure-payment-info:hover { transform: translateY(-2px); }
+        .secure-payment-info i { font-size: 2.2rem; background: linear-gradient(135deg, #0d9488, #0f766e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .secure-info-text { text-align: left; }
+        .secure-info-title { font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; }
+        .secure-info-desc { font-size: 0.9rem; color: #115e59; margin-top: 4px; opacity: 0.9; }
 
         .loading-spinner { display: none; }
         .loading-spinner.show { display: inline-block; margin-right: 8px; }
@@ -147,8 +168,16 @@ $currentPage = 'paiement';
         <?php endif; ?>
 
         <div class="amount-display">
-            <div class="amount-label">Montant à payer</div>
-            <div class="amount-value"><?php echo number_format($montant, 2, ',', ' '); ?> TND</div>
+            <?php if ($totalDiscountPercent > 0 && $montant > 0): ?>
+                <div class="amount-label">Montant initial</div>
+                <div class="amount-value" style="font-size: 1.5rem; color: #64748b; text-decoration: line-through;"><?php echo number_format($montant, 2, ',', ' '); ?> TND</div>
+                
+                <div class="amount-label" style="color: #10b981; margin-top: 15px;">Montant à payer (Remise -<?php echo $totalDiscountPercent; ?>%)</div>
+                <div class="amount-value" style="color: #10b981;"><?php echo number_format($montant * (1 - ($totalDiscountPercent / 100)), 2, ',', ' '); ?> TND</div>
+            <?php else: ?>
+                <div class="amount-label">Montant à payer</div>
+                <div class="amount-value"><?php echo number_format($montant, 2, ',', ' '); ?> TND</div>
+            <?php endif; ?>
         </div>
 
         <form method="post" action="process_payment.php" class="payment-form" id="paymentForm">
@@ -158,54 +187,27 @@ $currentPage = 'paiement';
             <input type="hidden" name="parcours_id" value="<?php echo $parcours_id; ?>">
             <input type="hidden" name="stand_id" value="<?php echo $stand_id; ?>">
             <input type="hidden" name="action" id="paymentAction" value="now">
-            <input type="hidden" name="methode_paiement" id="selectedMethod">
+            <input type="hidden" name="methode_paiement" id="selectedMethod" value="stripe">
             <input type="hidden" name="payment_method_id" id="paymentMethodId">
 
-            <div class="payment-methods">
-                <div class="payment-method" data-method="d17">
-                    <img src="images/d17.png" alt="D17" style="width: 60px; height: auto; margin-bottom: 12px;">
-                    <div class="method-icon">💳</div>
-                    <div class="method-name">D17</div>
-                    <div class="method-desc">Paiement par carte bancaire D17</div>
+            <div class="secure-payment-info">
+                <i class="fas fa-shield-alt"></i>
+                <div class="secure-info-text">
+                    <div class="secure-info-title">Paiement sécurisé par carte</div>
+                    <div class="secure-info-desc">Vos données sont cryptées par Stripe avec une sécurité de niveau bancaire.</div>
                 </div>
-                <div class="payment-method" data-method="paypal">
-                    <img src="images/paypal.png" alt="PayPal" style="width: 60px; height: auto; margin-bottom: 12px;">
-                    <div class="method-icon">🅿️</div>
-                    <div class="method-name">PayPal</div>
-                    <div class="method-desc">Paiement via PayPal</div>
-                </div>
-                <div class="payment-method" data-method="stripe">
-                    <img src="images/mastercard.png" alt="MasterCard" style="width: 60px; height: auto; margin-bottom: 12px;">
-                    <div class="method-icon">💳</div>
-                    <div class="method-name">Carte bancaire</div>
-                    <div class="method-desc">Visa, MasterCard, etc. (Stripe)</div>
+                <div style="margin-left: auto;">
+                    <img src="images/mastercard.png" alt="MasterCard" style="height: 35px; object-fit: contain;">
                 </div>
             </div>
 
-            <!-- Formulaire Stripe (affiché seulement quand Stripe est sélectionné) -->
+            <!-- Formulaire Stripe -->
             <div class="stripe-form" id="stripeForm">
                 <div id="stripe-card-element"></div>
                 <div id="stripe-errors" role="alert" style="color: #dc2626; margin-top: 10px; font-weight: 600;"></div>
             </div>
 
-            <div class="payment-details" id="d17Details">
-                <label for="d17Reference">Référence D17</label>
-                <input type="text" name="d17_reference" id="d17Reference" placeholder="Ex: D17-12345" autocomplete="off">
-                <small>Entrez la référence D17 fournie par votre banque ou terminal.</small>
-            </div>
-
-            <div class="payment-details" id="paypalDetails">
-                <label for="paypalEmail">Email PayPal</label>
-                <input type="email" name="paypal_email" id="paypalEmail" placeholder="votre.email@exemple.com" autocomplete="email">
-                <small>Entrez l'adresse email liée à votre compte PayPal.</small>
-            </div>
-
             <div style="margin-top:32px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:center;">
-                <?php if ($type === 'commande'): ?>
-                    <button type="button" class="btn btn-secondary" id="payLaterBtn">
-                        Payer ultérieurement
-                    </button>
-                <?php endif; ?>
                 <button type="submit" class="btn-pay" id="payBtn">
                     <span class="loading-spinner" id="spinner"><i class="fas fa-spinner fa-spin"></i></span>
                     <i class="fas fa-lock"></i> Payer maintenant
@@ -233,26 +235,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const elements = stripe.elements();
     const cardElement = elements.create('card');
     
-    const methods = document.querySelectorAll('.payment-method');
-    const selectedInput = document.getElementById('selectedMethod');
     const paymentActionInput = document.getElementById('paymentAction');
     const payBtn = document.getElementById('payBtn');
-    const payLaterBtn = document.getElementById('payLaterBtn');
     const paymentForm = document.getElementById('paymentForm');
-    const stripeForm = document.getElementById('stripeForm');
-    const d17Details = document.getElementById('d17Details');
-    const paypalDetails = document.getElementById('paypalDetails');
-    const d17Reference = document.getElementById('d17Reference');
-    const paypalEmail = document.getElementById('paypalEmail');
     const stripeErrors = document.getElementById('stripe-errors');
     const spinner = document.getElementById('spinner');
-    
-    let selectedMethod = null;
-    let paymentAction = 'now';
 
     // Initialiser Stripe Card Element
     cardElement.mount('#stripe-card-element');
     
+    cardElement.on('focus', () => { document.getElementById('stripe-card-element').classList.add('stripe-focus'); });
+    cardElement.on('blur', () => { document.getElementById('stripe-card-element').classList.remove('stripe-focus'); });
+
     cardElement.addEventListener('change', function(event) {
         if (event.error) {
             stripeErrors.textContent = event.error.message;
@@ -261,125 +255,59 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Gérer la sélection des méthodes de paiement
-    methods.forEach(method => {
-        method.addEventListener('click', function() {
-            methods.forEach(m => m.classList.remove('selected'));
-            this.classList.add('selected');
-            selectedMethod = this.dataset.method;
-            selectedInput.value = selectedMethod;
-            payBtn.disabled = false;
-            paymentActionInput.value = 'now';
-            
-            // Afficher/masquer le formulaire Stripe et les champs spécifiques
-            stripeForm.classList.toggle('active', selectedMethod === 'stripe');
-            d17Details.classList.toggle('active', selectedMethod === 'd17');
-            paypalDetails.classList.toggle('active', selectedMethod === 'paypal');
-            stripeErrors.textContent = '';
-        });
-    });
-
-    const isValidEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const isValidD17 = value => /^[A-Za-z0-9\-]{5,30}$/.test(value.trim());
-
-    if (payLaterBtn) {
-        payLaterBtn.addEventListener('click', function() {
-            paymentAction = 'later';
-            paymentActionInput.value = 'later';
-            selectedInput.value = '';
-            paymentForm.submit();
-        });
-    }
-
     // Gérer la soumission du formulaire
     paymentForm.addEventListener('submit', async function(e) {
-        if (paymentAction === 'later') {
-            paymentActionInput.value = 'later';
-            return;
-        }
         e.preventDefault();
 
-        if (!selectedMethod) {
-            showToast('Sélectionnez une méthode de paiement.', 'error');
-            return;
-        }
-
-        if (selectedMethod === 'd17') {
-            if (!d17Reference.value.trim()) {
-                showToast('Veuillez entrer la référence D17.', 'error');
-                return;
-            }
-            if (!isValidD17(d17Reference.value)) {
-                showToast('Référence D17 invalide. Utilisez lettres, chiffres et tirets.', 'error');
-                return;
-            }
-        }
-
-        if (selectedMethod === 'paypal') {
-            if (!paypalEmail.value.trim()) {
-                showToast('Veuillez entrer votre adresse PayPal.', 'error');
-                return;
-            }
-            if (!isValidEmail(paypalEmail.value)) {
-                showToast('Adresse PayPal invalide.', 'error');
-                return;
-            }
-        }
-        
         // Désactiver le bouton pendant le traitement
         payBtn.disabled = true;
         spinner.classList.add('show');
-        selectedInput.value = selectedMethod;
         paymentActionInput.value = 'now';
         
-        if (selectedMethod === 'stripe') {
-            try {
-                const { paymentMethod, error } = await stripe.createPaymentMethod({
-                    type: 'card',
-                    card: cardElement
-                });
+        try {
+            const { paymentMethod, error } = await stripe.createPaymentMethod({
+                type: 'card',
+                card: cardElement
+            });
 
-                if (error) {
-                    stripeErrors.textContent = error.message;
-                    showToast('❌ ' + error.message, 'error');
-                    payBtn.disabled = false;
-                    spinner.classList.remove('show');
-                    return;
-                }
-
-                const formData = new FormData(paymentForm);
-                formData.set('payment_method_id', paymentMethod.id);
-                formData.set('methode_paiement', 'stripe');
-
-                const response = await fetch('process_stripe_payment.php', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast('✅ Paiement réussi!', 'success');
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 1200);
-                    return;
-                }
-
-                const errorMsg = data.error || 'Erreur lors du paiement';
-                stripeErrors.textContent = errorMsg;
-                showToast('❌ ' + errorMsg, 'error');
+            if (error) {
+                stripeErrors.textContent = error.message;
+                showToast('❌ ' + error.message, 'error');
                 payBtn.disabled = false;
                 spinner.classList.remove('show');
-            } catch (err) {
-                const message = err.message || 'Erreur lors du traitement du paiement';
-                stripeErrors.textContent = message;
-                showToast('❌ ' + message, 'error');
-                payBtn.disabled = false;
-                spinner.classList.remove('show');
+                return;
             }
-        } else {
-            paymentForm.submit();
+
+            const formData = new FormData(paymentForm);
+            formData.set('payment_method_id', paymentMethod.id);
+            formData.set('methode_paiement', 'stripe');
+
+            const response = await fetch('process_stripe_payment.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast('✅ Paiement réussi!', 'success');
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1200);
+                return;
+            }
+
+            const errorMsg = data.error || 'Erreur lors du paiement';
+            stripeErrors.textContent = errorMsg;
+            showToast('❌ ' + errorMsg, 'error');
+            payBtn.disabled = false;
+            spinner.classList.remove('show');
+        } catch (err) {
+            const message = err.message || 'Erreur lors du traitement du paiement';
+            stripeErrors.textContent = message;
+            showToast('❌ ' + message, 'error');
+            payBtn.disabled = false;
+            spinner.classList.remove('show');
         }
     });
 });

@@ -6,9 +6,11 @@ include '../../../Controller/CommandeController.php';
 include '../../../Controller/LigneCommandeController.php';
 include '../../../Controller/ProduitController.php';
 include '../../../Controller/FavoriteController.php';
+include '../../../Controller/UserController.php';
 
 $prodCtrl = new ProduitController();
 $favCtrl = new FavoriteController();
+$userCtrl = new UserController();
 
 $stand_id = isset($_GET['stand_id']) ? (int)$_GET['stand_id'] : null;
 $parcours_id = isset($_GET['parcours_id']) ? (int)$_GET['parcours_id'] : null;
@@ -54,6 +56,10 @@ $role = $user['role'] ?? 'visiteur';
 $userId = $user['id_user'] ?? $user['id'];
 $userFavorites = $favCtrl->getFavoritesByUser($userId);
 $favoriteIds = array_column($userFavorites, 'ID_produit');
+
+$dbUser = $userCtrl->showUser($userId);
+$nbreCommande = isset($dbUser['nbre_commande']) ? (int)$dbUser['nbre_commande'] : 0;
+$isFirstOrder = ($nbreCommande === 0);
 
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
@@ -257,6 +263,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $cartTotal = 0;
 foreach ($cart as $item) {
     $cartTotal += $item['quantite'] * $item['prix'];
+}
+$discount = 0;
+if ($isFirstOrder && $cartTotal > 0) {
+    $discount = $cartTotal * 0.10;
 }
 ?>
 <!DOCTYPE html>
@@ -576,7 +586,7 @@ foreach ($cart as $item) {
     <!-- AI Agent Section -->
     <section class="ai-agent-section" style="background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9)); border-radius: 24px; padding: 40px; margin-bottom: 50px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); backdrop-filter: blur(10px); border: 1px solid rgba(15,118,110,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
-            <h2 style="color: var(--ink); font-size: 2rem; font-weight: 900; margin-bottom: 10px;">🤖 Agent IA Healthy</h2>
+            <h2 style="color: var(--ink); font-size: 2rem; font-weight: 900; margin-bottom: 10px;">🥦 Dr. Brocoli, l'IA Nutritionniste</h2>
             <p style="color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Laissez notre IA vous composer un panier équilibré et healthy adapté à votre budget et au nombre de personnes. <strong>Règle principale:</strong> Chaque produit est pris en quantité égale au nombre de personnes, sauf réduction pour budget faible ou produits moins healthy.</p>
         </div>
 
@@ -762,7 +772,19 @@ foreach ($cart as $item) {
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
-                                <div class="cart-total"><?php echo number_format($cartTotal, 2, ',', ' '); ?> TND</div>
+                                
+                                <?php if ($isFirstOrder && $cartTotal > 0): ?>
+                                    <div class="cart-total" style="color: #64748b; font-size: 1.1rem; border-top: none; padding-top: 15px; margin-top: 15px; border-top: 2px solid #f1f5f9;">
+                                        Sous-total: <span><?php echo number_format($cartTotal, 2, ',', ' '); ?> TND</span>
+                                    </div>
+                                    <div class="cart-total" style="color: #10b981; font-size: 1.1rem; border-top: none; padding-top: 5px; margin-top: 0;">
+                                        Remise 1ère commande (-10%) : -<?php echo number_format($discount, 2, ',', ' '); ?> TND
+                                    </div>
+                                    <div class="cart-total" style="border-top: none; padding-top: 5px; margin-top: 0;">Total à payer : <?php echo number_format($cartTotal - $discount, 2, ',', ' '); ?> TND</div>
+                                <?php else: ?>
+                                    <div class="cart-total"><?php echo number_format($cartTotal, 2, ',', ' '); ?> TND</div>
+                                <?php endif; ?>
+                                
                                 <div>
                                     <button type="submit" name="validate_order" class="btn btn-primary">Valider la commande</button>
                                     <button type="submit" name="clear_cart" class="btn btn-danger">Vider le panier</button>
