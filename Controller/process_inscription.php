@@ -29,7 +29,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (
         empty($_POST["nb_personnes"]) ||
         empty($_POST["mode_paiement"]) ||
-        empty($_POST["date_paiement"]) ||
         empty($_POST["circuit"])
     ) {
         header("Location: ../View/FrontOffice/inscription.php?error=missing_fields");
@@ -38,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $nb          = (int)  $_POST["nb_personnes"];
     $mode        = trim(  $_POST["mode_paiement"]);
-    $date        =        $_POST["date_paiement"];
+    
     $id_parcours = (int)  $_POST["circuit"]; // ✅ vrai id_parcours depuis la base
 
     // ✅ Valider nb_personnes
@@ -64,12 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // ✅ Valider la date
-    $dateObj = DateTime::createFromFormat('Y-m-d', $date);
-    if (!$dateObj) {
-        header("Location: ../View/FrontOffice/inscription.php?error=missing_fields");
-        exit;
-    }
+    
 
     // ──────────────────────────────────────────────
     // ACTION : AJOUTER
@@ -80,22 +74,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             null,           // id_inscription (auto-increment)
             $nb,            // nb_personnes
             $mode,          // mode_de_paiement
-            $date,          // date_paiement
+            null,          // date_paiement
             $id_parcours,   // ✅ vrai id_parcours depuis la base
             (int) $id_user  // ✅ vrai id_user depuis la session
         );
 
         $last_id = $controller->add($inscription);
 
-        // ✅ Decrementer les places du marathon
-        require_once __DIR__ . "/../Controller/InscriptionMarathonController.php";
-        $parcoursInfo = $parcoursCtrl->showParcours($id_parcours);
-        if ($parcoursInfo && !empty($parcoursInfo['id_marathon'])) {
-            $inscMarathonCtrl = new InscriptionMarathonController();
-            $inscMarathonCtrl->decrementerPlacesBy($parcoursInfo['id_marathon'], $nb);
-        }
-
-        header("Location: ../View/FrontOffice/dossard.php?id_inscription=" . $last_id . "&parcours_id=" . $id_parcours);
+        header("Location: ../View/FrontOffice/dossard.php?id_inscription=" . $last_id);
         exit;
     }
 
@@ -115,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $id,            // id_inscription
             $nb,            // nb_personnes
             $mode,          // mode_de_paiement
-            $date,          // date_paiement
+            null,          // date_paiement
             $id_parcours,   // ✅ vrai id_parcours depuis la base
             (int) $id_user  // ✅ vrai id_user depuis la session
         );

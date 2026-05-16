@@ -8,8 +8,8 @@ class InscriptionController {
     public function add(Inscription $inscription) {
 
         $sql = "INSERT INTO inscription
-        (nb_personnes, mode_de_paiement, date_inscription, date_paiement, id_user, id_parcours, statut_paiement)
-        VALUES (:nb, :mode, NOW(), :date, :user, :parcours, :statut)";
+(nb_personnes, mode_de_paiement, date_inscription, date_paiement, id_user, id_parcours, statut_paiement)
+VALUES (:nb, :mode, NOW(), NULL, :user, :parcours, :statut)";
 
         $db = Config::getConnexion();
         $stmt = $db->prepare($sql);
@@ -17,7 +17,6 @@ class InscriptionController {
         $stmt->execute([
             'nb' => $inscription->getNbPersonnes(),
             'mode' => $inscription->getModePaiement(),
-            'date' => date('Y-m-d H:i:s'),
             'user' => $inscription->getIdUser(),
             'parcours' => $inscription->getIdParcours(),
             'statut' => $inscription->getStatutPaiement() ?? "unpaid"
@@ -101,7 +100,9 @@ class InscriptionController {
 
         $stmt = $db->prepare("
             UPDATE inscription 
-            SET statut_paiement='paid'
+            SET 
+                statut_paiement='paid',
+                date_paiement=NOW()
             WHERE id_inscription=?
         ");
 

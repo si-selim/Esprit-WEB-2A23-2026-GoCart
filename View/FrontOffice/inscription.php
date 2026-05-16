@@ -170,11 +170,7 @@ $role = $user['role'] ?? 'visiteur';
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 
 <div class="page">
-    <?php if ($preselected_parcours_id > 0): ?>
-        <a class="back-link" href="detailParcours.php?id=<?php echo $preselected_parcours_id; ?>">← Retour au parcours</a>
-    <?php else: ?>
-        <a class="back-link" href="listMarathons.php">← Retour aux marathons</a>
-    <?php endif; ?>
+    <a class="back-link" href="listMarathons.php">← Retour aux marathons</a>
 
     <div class="page-header">
         <h1>🏃‍♂️ Inscription au Marathon</h1>
@@ -246,10 +242,7 @@ $role = $user['role'] ?? 'visiteur';
                     <small id="error-mode_paiement"></small>
                 </div>
 
-                <div class="field-group">
-                    <label>Date de paiement</label>
-                    <input type="date" id="date_paiement" name="date_paiement" value="<?php echo date('Y-m-d'); ?>">
-                </div>
+                
             </div>
 
             <div class="prix-display">
@@ -342,7 +335,15 @@ $role = $user['role'] ?? 'visiteur';
                                 <!-- ✅ Afficher le nom du parcours au lieu de l'ID brut -->
                                 <td><?php echo htmlspecialchars($parcoursIndex[$row['id_parcours']] ?? 'Parcours #' . $row['id_parcours']); ?></td>
                                 <td><?php echo $row['nb_personnes']; ?></td>
-                                <td><?php echo date("Y-m-d", strtotime($row['date_paiement'])); ?></td>
+                                <td>
+                                <?php
+                                if (!empty($row['date_paiement'])) {
+                                    echo date("Y-m-d", strtotime($row['date_paiement']));
+                                } else {
+                                    echo "—";
+                                }
+                                ?>
+                                </td>
                                 <td>
                                     <?php if ($row['statut_paiement'] == 'paid'): ?>
                                         <span class="badge badge-paid"><i class="fa-solid fa-circle-check"></i> Payé</span>
@@ -363,7 +364,7 @@ $role = $user['role'] ?? 'visiteur';
                                             <i class="fa-solid fa-pen"></i> Sélectionner
                                         </button>
 
-                                        <a href="../FrontOffice/voirDossard.php?id_inscription=<?php echo $row['id_inscription']; ?><?php if($preselected_parcours_id > 0) echo '&parcours_id='.$preselected_parcours_id; ?>"
+                                        <a href="../FrontOffice/voirDossard.php?id_inscription=<?php echo $row['id_inscription']; ?>"
                                            class="btn btn-secondary btn-small">
                                             <i class="fa-solid fa-eye"></i> Voir
                                         </a>

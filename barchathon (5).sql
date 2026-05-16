@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : sam. 16 mai 2026 à 05:20
+-- Généré le : sam. 16 mai 2026 à 11:59
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -80,6 +80,14 @@ CREATE TABLE `dossard` (
   `qr_code` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Déchargement des données de la table `dossard`
+--
+
+INSERT INTO `dossard` (`id_dossard`, `nom`, `numero`, `taille`, `id_inscription`, `couleur`, `qr_code`) VALUES
+(224, 'Groupe2', 1, 'S', 190, '#5e8d89', 'qr_224.png'),
+(225, 'Group1', 2, 'S', 191, '#346561', 'qr_225.png');
+
 -- --------------------------------------------------------
 
 --
@@ -112,7 +120,7 @@ CREATE TABLE `inscription` (
   `nb_personnes` int(11) NOT NULL,
   `mode_de_paiement` varchar(25) NOT NULL,
   `date_inscription` datetime NOT NULL,
-  `date_paiement` datetime NOT NULL,
+  `date_paiement` datetime DEFAULT NULL,
   `id_user` int(11) NOT NULL,
   `id_parcours` int(11) NOT NULL,
   `statut_paiement` varchar(20) DEFAULT 'unpaid',
@@ -126,7 +134,7 @@ CREATE TABLE `inscription` (
 --
 
 INSERT INTO `inscription` (`id_inscription`, `nb_personnes`, `mode_de_paiement`, `date_inscription`, `date_paiement`, `id_user`, `id_parcours`, `statut_paiement`, `email_24h_sent`, `email_1h_sent`, `statut_course`) VALUES
-(189, 1, 'cash', '2026-05-16 04:16:16', '2026-05-16 04:16:16', 10, 48, 'unpaid', 0, 0, 'inscrit');
+(191, 1, 'cash', '2026-05-16 10:50:41', '2026-05-16 10:51:47', 3, 48, 'paid', 0, 0, 'inscrit');
 
 -- --------------------------------------------------------
 
@@ -192,7 +200,7 @@ CREATE TABLE `marathon` (
 --
 
 INSERT INTO `marathon` (`id_marathon`, `nom_marathon`, `image_marathon`, `organisateur_marathon`, `region_marathon`, `date_marathon`, `nb_places_dispo`, `prix_marathon`) VALUES
-(40, 'Marathon de la Côte', 'images/uploads/1777899026_69f89612b6b92.png', 'Organisateur Demo', 'Nabeul', '2026-05-16', 99, 5);
+(40, 'Marathon de la Côte', 'images/uploads/1777899026_69f89612b6b92.png', 'Organisateur Demo', 'Nabeul', '2026-05-16', 98, 5);
 
 -- --------------------------------------------------------
 
@@ -390,7 +398,7 @@ CREATE TABLE `user` (
 INSERT INTO `user` (`id_user`, `nom_complet`, `nom_user`, `mot_de_passe`, `age`, `poids`, `taille`, `email`, `pays`, `ville`, `tel`, `occupation`, `profile_picture`, `role`, `status`, `last_active_at`, `sexe`, `verified`, `verification_token`, `face_descriptor`, `google_id`, `reset_token`, `reset_token_expires`, `last_logout_at`, `nbre_commande`, `nbre_inscription`, `last_login_date`, `consecutive_logins`, `pending_discount`, `xp`, `solde_achat`) VALUES
 (1, 'Administrateur', 'admin', '123456', NULL, NULL, NULL, 'admin@barchathon.tn', NULL, NULL, NULL, NULL, NULL, 'admin', 'active', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, 0, 0, 0, 0),
 (2, 'Organisateur Demo', 'organisateur', '$2y$10$OTWqaCplEDuU4T6oE2.Bgu9SJnb6OdeHmGbzwtPXcGvmUKGg1DFPi', NULL, NULL, NULL, 'orga@barchathon.tn', NULL, NULL, NULL, NULL, NULL, 'organisateur', 'active', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, '2026-05-16', 3, 0, 0, 0),
-(3, 'Participant Demo', 'participant', '$2y$10$m/QCqoT/.uOK3cwuCOjC0uRuVPLDHqedWbYQg.0ESc1jgDYclhJR.', 50, 80, 180, 'souuuheee@gmail.com', NULL, NULL, NULL, NULL, NULL, 'participant', 'active', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, '2026-05-15', 1, 0, 0, 0),
+(3, 'Participant Demo', 'participant', '$2y$10$m/QCqoT/.uOK3cwuCOjC0uRuVPLDHqedWbYQg.0ESc1jgDYclhJR.', 50, 80, 180, 'souuuheee@gmail.com', NULL, NULL, NULL, NULL, NULL, 'participant', 'active', NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, '2026-05-16', 2, 0, 0, 0),
 (4, 'Anas', 'Touil', '$2y$10$2RY.NZKr4QnnGDmaG5hpH.LN9BTKByJfv0QNmh.RZ60JYAumMQU5a', 50, 50, 180, 'Anas.Touil@esprit.tn', 'Tunisia', 'Kairouan', '28306227', NULL, 'pp_69ecea58040fe5.13698447.webp', 'participant', 'active', '2026-05-04 15:06:23', 'homme', 0, '0531299e349b484507f78ec4b49093cccaa316140acba16a13cc5ae030656aff', NULL, NULL, '6252c440bf77242dd3b448b4aac9a290757d0eada68f3e325d8ba30bd5652ddb', '2026-04-24 22:01:51', '2026-05-04 14:00:59', 0, 0, NULL, 0, 0, 0, 0),
 (6, 'BarchaThon', 'barchathon', '$2y$10$yKoWPjtL1dGBuHLOAVht6.cHvh19EcDjmbBmUjl3wBDi7fweROrqq', NULL, NULL, NULL, 'barchathon@gmail.com', NULL, NULL, NULL, NULL, 'https://lh3.googleusercontent.com/a/ACg8ocJHvxaJHMMh-ZhqdXEa9Bva7eNes77tt7mU6bDpqU8my5vliA=s96-c', 'participant', 'active', NULL, NULL, 1, NULL, NULL, '104889734528514256034', NULL, NULL, NULL, 0, 0, NULL, 0, 0, 0, 0),
 (8, 'eee', 'eee', '$2y$10$mPxukPubG0HKxebXCOLHlOO2mFsUESyO./4IbwkcRcJZkCO745IeC', 20, 50, 170, 'touilanas00@gmail.com', 'Tunisia', 'Kairouan', '28306227', NULL, 'pp_69ef6083e0fdc1.87649496.webp', 'admin', 'active', '2026-05-04 15:04:56', 'homme', 1, NULL, '[-0.11707562208175659,0.07686099410057068,0.03598225861787796,-0.059945330023765564,-0.0576687715947628,-0.05551685392856598,0.022898292168974876,-0.10492634773254395,0.13207502663135529,-0.06920177489519119,0.31058526039123535,-0.06346745789051056,-0.20420685410499573,0.025148022919893265,-0.015554527752101421,0.16296333074569702,-0.21611127257347107,-0.07141030579805374,-0.1392584890127182,-0.05579861253499985,0.09314735978841782,0.05220949649810791,-0.08126748353242874,0.09251997619867325,-0.18360662460327148,-0.26499536633491516,-0.08404802531003952,-0.06395968794822693,0.015562111511826515,-0.043044064193964005,0.00002606001180538442,0.024065392091870308,-0.1223096251487732,-0.04887368902564049,0.07169043272733688,0.04771106690168381,-0.010680371895432472,-0.030258264392614365,0.14668428897857666,-0.03373243659734726,-0.20358559489250183,0.09192854166030884,0.14703933894634247,0.26937517523765564,0.1929420381784439,0.12908846139907837,0.01691819541156292,-0.02741529792547226,0.059564534574747086,-0.24464914202690125,0.0597320981323719,0.06313689053058624,0.20632395148277283,0.03712041303515434,0.09115691483020782,-0.21600893139839172,-0.038351912051439285,0.15272225439548492,-0.16788937151432037,0.10920592397451401,0.10304819047451019,-0.11551257222890854,0.053360238671302795,-0.04433484002947807,0.20586548745632172,0.07035011798143387,-0.16819970309734344,-0.03213374316692352,0.16301415860652924,-0.13880525529384613,-0.07469744235277176,0.00037771163624711335,-0.11864971369504929,-0.22324834764003754,-0.3186737298965454,0.042445093393325806,0.44277724623680115,0.1550922989845276,-0.17816688120365143,0.03135990351438522,0.028557883575558662,0.06832193583250046,0.09774437546730042,0.04753177613019943,-0.09575550258159637,-0.07238412648439407,-0.09901831299066544,0.03088715299963951,0.2240755707025528,0.02586377039551735,-0.0058655948378145695,0.24282656610012054,-0.042721524834632874,-0.046774256974458694,-0.0060861920937895775,0.009601480327546597,-0.07536105811595917,-0.01812046952545643,-0.040323592722415924,0.044576242566108704,-0.0004355185083113611,-0.08269504457712173,0.05258813127875328,0.12868012487888336,-0.20511722564697266,0.11873748898506165,-0.04482165351510048,0.02635609731078148,-0.02196710743010044,0.12492652237415314,-0.09004215151071548,-0.0006383003783412278,0.14271491765975952,-0.24737292528152466,0.17755812406539917,0.19638948142528534,0.005071531515568495,0.12749172747135162,0.05294708535075188,0.04635413736104965,0.03362489864230156,0.03728245943784714,-0.20493033528327942,-0.08721716701984406,0.06642085313796997,-0.11461347341537476,0.17440195381641388,0.0764831081032753]', '117094415717229109263', NULL, NULL, '2026-05-04 15:02:35', 0, 0, '2026-05-16', 3, 0, 0, 0),
@@ -546,7 +554,7 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT pour la table `dossard`
 --
 ALTER TABLE `dossard`
-  MODIFY `id_dossard` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=224;
+  MODIFY `id_dossard` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=226;
 
 --
 -- AUTO_INCREMENT pour la table `favorites`
@@ -558,7 +566,7 @@ ALTER TABLE `favorites`
 -- AUTO_INCREMENT pour la table `inscription`
 --
 ALTER TABLE `inscription`
-  MODIFY `id_inscription` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=190;
+  MODIFY `id_inscription` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=192;
 
 --
 -- AUTO_INCREMENT pour la table `lignecommande`

@@ -15,7 +15,7 @@ define('C_GREY_R', 100);  define('C_GREY_G', 116);  define('C_GREY_B', 139);
 define('C_LINE_R', 226);  define('C_LINE_G', 232);  define('C_LINE_B', 240);
 
 // ── Chemin du logo (à adapter si besoin) ──────────────────────────────────
-define('LOGO_PATH', __DIR__ . '/../assets/images/logo_barchathon.jpg');
+define('LOGO_PATH', $_SERVER['DOCUMENT_ROOT'] . '/MARATHONS/logo.jpg');
 
 class BarchaPDF extends FPDF
 {
@@ -247,7 +247,7 @@ foreach ($dossards as $i => $d) {
     }
 
     $pdf->SetXY($xColor+32, $yRow);
-    $qrPath = $_SERVER['DOCUMENT_ROOT'].'/MARATHONS/qr/'.($d['qr_code']??'');
+    $qrPath = __DIR__ . '/../../qr/' . ($d['qr_code'] ?? '');
     if (!empty($d['qr_code']) && file_exists($qrPath)) {
         $pdf->Cell(38,$rowH,'','B',0,'C',true);
         $pdf->Image($qrPath, $xColor+32+10, $yRow+2, 18, 18);

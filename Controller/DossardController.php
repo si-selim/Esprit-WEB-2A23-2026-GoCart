@@ -67,15 +67,7 @@ class DossardController {
 
         $id = $db->lastInsertId();
 
-        $dataQR =
-"===== DOSSARD =====\n".
-"ID Dossard: ".$id."\n".
-"ID Inscription: ".$dossard->getIdInscription()."\n".
-"Nom: ".$dossard->getNom()."\n".
-"Numero: ".$dossard->getNumero()."\n".
-"Taille: ".$dossard->getTaille()."\n".
-"Couleur: ".$dossard->getCouleur()."\n".
-"====================";
+      $dataQR = "https://customs-execute-sam-newcastle.trycloudflare.com/souha/View/FrontOffice/trackDossard.php?id=" . $id;
 
         $fileName = $this->generateQRFile($id, $dataQR);
 
@@ -127,15 +119,7 @@ class DossardController {
     public function regenerateQR(array $row) {
         $id = $row['id_dossard'];
 
-        $dataQR =
-"===== DOSSARD =====\n".
-"ID Dossard: ".$id."\n".
-"ID Inscription: ".$row['id_inscription']."\n".
-"Nom: ".$row['nom']."\n".
-"Numero: ".$row['numero']."\n".
-"Taille: ".$row['taille']."\n".
-"Couleur: ".$row['couleur']."\n".
-"====================";
+        $dataQR = "https://customs-execute-sam-newcastle.trycloudflare.com/souha/View/FrontOffice/trackDossard.php?id=" . $id;
 
         $fileName = $this->generateQRFile($id, $dataQR);
         if (!$fileName) return null;
@@ -146,6 +130,12 @@ class DossardController {
 
         return $fileName;
     }
+    public function getById($id) {
+    $db = Config::getConnexion();
+    $stmt = $db->prepare("SELECT * FROM dossard WHERE id_dossard = ?");
+    $stmt->execute([$id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 }
 
 

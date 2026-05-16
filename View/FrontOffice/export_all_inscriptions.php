@@ -351,7 +351,9 @@ foreach ($liste as $row) {
         ? '<span class="badge-paid">Payé</span>'
         : '<span class="badge-unpaid">Non payé</span>';
 
-    $date_p = date("d/m/Y", strtotime($row['date_paiement']));
+    $date_p = !empty($row['date_paiement'])
+    ? date("d/m/Y", strtotime($row['date_paiement']))
+    : "—";
     $date_i = date("d/m/Y", strtotime($row['date_inscription']));
 
     $html .= "

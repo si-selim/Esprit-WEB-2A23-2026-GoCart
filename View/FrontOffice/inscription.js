@@ -1,17 +1,39 @@
 function calculerPrix() {
+
     var nb      = document.getElementById("nb_personnes");
     var circuit = document.getElementById("circuit");
     var champ   = document.getElementById("prix_total");
+
     if (!nb || !circuit || !champ) return;
+
     var nombre = parseInt(nb.value);
-    if (isNaN(nombre) || nombre <= 0) { champ.value = "0 TND"; return; }
-    var prix = { "1": 20, "2": 40, "3": 60 };
+
+    if (isNaN(nombre) || nombre <= 0) {
+        champ.textContent = "0 TND";
+        return;
+    }
+
+    var prix = {
+        "1": 20,
+        "2": 40,
+        "3": 60
+    };
+
     var pu = prix[circuit.value];
-    if (!pu) { champ.value = "0 TND"; return; }
+
+    if (!pu) {
+        champ.textContent = "0 TND";
+        return;
+    }
+
     var total = pu * nombre;
-    if (nombre >= 5) total *= 0.8;
-    else if (nombre >= 3) total *= 0.9;
-    champ.value = total.toFixed(2) + " TND";
+
+    if (nombre >= 5)
+        total *= 0.8;
+    else if (nombre >= 3)
+        total *= 0.9;
+
+    champ.textContent = total.toFixed(2) + " TND";
 }
 
 function setTodayDate() {
@@ -74,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var nb      = document.getElementById("nb_personnes");
     var circuit = document.getElementById("circuit");
     var mode    = document.getElementById("mode_paiement");
-    var date    = document.getElementById("date_paiement");
+    
 
     function validateNb() {
         var e = document.getElementById("error-nb_personnes");
@@ -97,22 +119,15 @@ document.addEventListener("DOMContentLoaded", function () {
         e.style.color = ok ? "green" : "red";
         return ok;
     }
-    function validateDate() {
-        var e = document.getElementById("error-date_paiement");
-        if (!e) return true;
-        var ok = date.value !== "";
-        e.innerText = ok ? "OK" : "Date obligatoire";
-        e.style.color = ok ? "green" : "red";
-        return ok;
-    }
-
+    
     nb.addEventListener("input",       function() { validateNb();      calculerPrix(); });
     circuit.addEventListener("change", function() { validateCircuit(); calculerPrix(); });
-    mode.addEventListener("change",    validateMode);
-    date.addEventListener("change",    validateDate);
+    mode.addEventListener("change", validateMode);
+
+
 
     form.addEventListener("submit", function(e) {
-        var ok = validateNb() && validateCircuit() && validateMode() && validateDate();
+        var ok = validateNb() && validateCircuit() && validateMode() ;
         if (!ok) { e.preventDefault(); alert("Vérifie les champs !"); }
     });
 
