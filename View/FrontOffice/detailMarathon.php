@@ -65,6 +65,9 @@ $estDejaInscrit = false;
 if ($role === 'participant' && $userId) {
     $estDejaInscrit = $inscCtrl->estDejaInscrit($userId, $id);
 }
+
+// Vérifier si le marathon est terminé (date_marathon < aujourd'hui)
+$marathonTermine = (!empty($m['date_marathon']) && strtotime($m['date_marathon']) < strtotime('today'));
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -145,8 +148,29 @@ if ($role === 'participant' && $userId) {
 
         .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; margin-bottom:36px; }
 
-        .p-card { background:white; border-radius:18px; border:1px solid rgba(16,42,67,.07); box-shadow:0 6px 20px rgba(16,42,67,.07); overflow:hidden; transition:transform .2s; }
+        .p-card { background:white; border-radius:18px; border:1px solid rgba(16,42,67,.07); box-shadow:0 6px 20px rgba(16,42,67,.07); overflow:hidden; transition:transform .2s; position:relative; }
         .p-card:hover { transform:translateY(-3px); }
+
+        /* ── CLICK RIPPLE ──────────────────────────────────────────────── */
+        @keyframes ripple-burst {
+            0%   { transform: scale(0); opacity: 0.5; }
+            70%  { transform: scale(2.8); opacity: 0.15; }
+            100% { transform: scale(3.6); opacity: 0; }
+        }
+        @keyframes card-press {
+            0%   { transform: translateY(-3px) scale(1); }
+            40%  { transform: translateY(0px) scale(0.972); }
+            100% { transform: translateY(-2px) scale(0.985); }
+        }
+        .p-card.clicking { animation: card-press 0.32s cubic-bezier(.22,.61,.36,1) forwards; }
+        .ripple-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(15,118,110,0.38), rgba(15,118,110,0.06));
+            pointer-events: none;
+            animation: ripple-burst 0.55s cubic-bezier(.22,.61,.36,1) forwards;
+            z-index: 10;
+        }
         .diff-band { padding:9px 16px; font-weight:800; font-size:0.83rem; letter-spacing:.04em; }
         .diff-facile { background:linear-gradient(90deg,#d1fae5,#a7f3d0); color:#065f46; }
         .diff-moyen  { background:linear-gradient(90deg,#fef9c3,#fde68a); color:#92400e; }
@@ -250,6 +274,14 @@ if ($role === 'participant' && $userId) {
         }
         .btn-ia-reco:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(59,130,246,.5); }
         .btn-ia-reco .ia-icon { font-size: 1rem; }
+        .btn-ia-reco:disabled, .btn-ia-reco.disabled {
+            background: linear-gradient(135deg, #94a3b8, #cbd5e1) !important;
+            color: #94a3b8 !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            transform: none !important;
+            opacity: 0.65;
+        }
 
         /* ── IA MODAL ─────────────────────────────────────────────────────── */
         .ia-modal-overlay {
@@ -481,7 +513,7 @@ if ($role === 'participant' && $userId) {
             </div>
         </div>
         <div class="detail-img">
-            <img src="images/hero_runner.png" alt="<?php echo htmlspecialchars($m['nom_marathon']); ?>" onerror="this.src='images/img1.svg'">
+            <img src="<?php echo (!empty($m['image_marathon']) ? htmlspecialchars($m['image_marathon']) : 'images/hero_runner.png'); ?>" alt="<?php echo htmlspecialchars($m['nom_marathon']); ?>" onerror="this.src='images/hero_runner.png'">
             <span class="img-id">#<?php echo $m['id_marathon']; ?></span>
             <span class="places-badge <?php echo $m['nb_places_dispo']>0?'places-ok':'places-no'; ?>">
                 <?php echo $m['nb_places_dispo']>0 ? '✅ '.$m['nb_places_dispo'].' places' : '❌ Complet'; ?>
@@ -499,9 +531,15 @@ if ($role === 'participant' && $userId) {
             ?></span>
         </div>
         <?php if ($role === 'participant' && $userId && !empty($allParcoursDuMarathon)): ?>
+        <?php if ($marathonTermine): ?>
+        <button class="btn-ia-reco disabled" disabled title="Marathon terminé — fonctionnalité indisponible" style="font-size:.83rem;padding:8px 16px;">
+            ⚡ Meilleur parcours pour moi
+        </button>
+        <?php else: ?>
         <button class="btn-ia-reco" onclick="openIaModal()" style="font-size:.83rem;padding:8px 16px;">
             ⚡ Meilleur parcours pour moi
         </button>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
 
@@ -1015,6 +1053,25 @@ document.getElementById('delParcoursModal').addEventListener('click', function(e
 })();
 </script>
 <?php endif; ?>
+
+<script>
+// ── CLICK RIPPLE on parcours cards ──────────────────────────────────────
+document.querySelectorAll('.p-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+        if (e.target.closest('a[href], button')) return; // don't override button clicks
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const size = Math.max(rect.width, rect.height) * 1.4;
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple-circle';
+        ripple.style.cssText = `width:${size}px;height:${size}px;left:${x - size/2}px;top:${y - size/2}px;`;
+        this.appendChild(ripple);
+        this.classList.add('clicking');
+        setTimeout(() => { ripple.remove(); this.classList.remove('clicking'); }, 600);
+    });
+});
+</script>
 
 </body>
 </html>

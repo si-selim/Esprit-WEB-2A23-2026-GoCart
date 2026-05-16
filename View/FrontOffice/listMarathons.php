@@ -14,6 +14,14 @@ if ($search !== '') $marathons = $controller->rechercherMarathon($search);
 elseif ($filterRegion !== '') $marathons = $controller->filtrerMarathon($filterRegion);
 else $marathons = $controller->afficherMarathon();
 
+// Masquer automatiquement les marathons terminés (date passée)
+$activeMarathons = [];
+foreach ($marathons as $m) {
+    if (!empty($m['date_marathon']) && strtotime($m['date_marathon']) < strtotime('today')) continue;
+    $activeMarathons[] = $m;
+}
+$marathons = $activeMarathons;
+
 $stats = $controller->statsNbMarathonsDispo();
 $pStats = $pController->statsParcours();
 $regions = $controller->getRegions();
@@ -115,6 +123,8 @@ $role = $user['role'] ?? 'visiteur';
         @keyframes rise { to { opacity:1; transform:translateY(0); } }
         /* MÉTÉO BADGE */
         .meteo-badge { transition: all .3s; white-space: nowrap; }
+
+
 
         @media(max-width:768px){ .hero-strip{grid-template-columns:1fr;} }
 

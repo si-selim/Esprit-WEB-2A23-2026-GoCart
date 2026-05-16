@@ -26,6 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['claim_id'])) {
         if ($progress >= $objectif['target_value'] && !in_array($claimId, $claims)) {
             $objCtrl->claimRecompense($userId, $claimId);
             $success_message = "Récompense réclamée avec succès !";
+            // Update session XP for immediate topbar reflection
+            $xpEarned = (int)$objectif['target_value'] * 10;
+            $_SESSION['user']['xp'] = ($_SESSION['user']['xp'] ?? 0) + $xpEarned;
+            $user['xp'] = $_SESSION['user']['xp']; // update local var for this request
         } else {
             $error_message = "Vous ne remplissez pas les conditions ou vous avez déjà réclamé cette récompense.";
         }
@@ -130,6 +134,7 @@ $progressCache = [];
 
                 <div class="reward-box z-2">
                     <div class="reward-title">🎁 <?php echo htmlspecialchars($obj['recompense']); ?></div>
+                    <div class="reward-desc" style="color: #0f766e; font-weight: bold;">⭐ +<?php echo (int)$target * 10; ?> XP</div>
                     <?php if ($obj['description_recompense']): ?>
                         <div class="reward-desc"><?php echo htmlspecialchars($obj['description_recompense']); ?></div>
                     <?php endif; ?>

@@ -5,6 +5,8 @@ require_once "../../Controller/DossardController.php";
 require_once "../../Controller/InscriptionController.php";
 
 $id = $_GET['id_inscription'] ?? 0;
+$parcours_id = isset($_GET['parcours_id']) ? (int)$_GET['parcours_id'] : 0;
+$back_url = $parcours_id > 0 ? "inscription.php?parcours_id=" . $parcours_id : "inscription.php";
 
 $inscriptionController = new InscriptionController();
 $dossardController     = new DossardController();
@@ -84,7 +86,7 @@ $user = getCurrentUser();
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 
 <div class="page">
-    <a class="back-link" href="inscription.php">← Retour aux inscriptions</a>
+    <a class="back-link" href="<?php echo $back_url; ?>">← Retour aux inscriptions</a>
 
     <div class="page-header">
         <h1>🎽 Dossards</h1>
@@ -155,10 +157,11 @@ $user = getCurrentUser();
                 <button type="submit" class="btn btn-primary">
                     <i class="fa-solid fa-floppy-disk"></i> Enregistrer les dossards
                 </button>
-                <a href="inscription.php" class="btn btn-outlined">
+                <a href="<?php echo $back_url; ?>" class="btn btn-outlined">
                     <i class="fa-solid fa-arrow-left"></i> Retour
                 </a>
             </div>
+            <input type="hidden" name="parcours_id" value="<?php echo $parcours_id; ?>">
         </form>
     </div>
 </div>

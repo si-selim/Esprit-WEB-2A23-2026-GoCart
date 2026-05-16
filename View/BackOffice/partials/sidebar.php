@@ -58,10 +58,9 @@ $_user = isset($user) ? $user : (function_exists('getCurrentUser') ? (getCurrent
         <a class="side-link <?php echo $_sidebarActive==='produits'?'active':''; ?>" href="dashboard.php?tab=produits"><?php echo t('bo_produits'); ?></a>
         <a class="side-link <?php echo $_sidebarActive==='commandes'?'active':''; ?>" href="dashboard.php?tab=commandes"><?php echo t('bo_commandes'); ?></a>
         <a class="side-link <?php echo $_sidebarActive==='sponsors'?'active':''; ?>" href="dashboard.php?tab=sponsors"><?php echo t('bo_sponsors'); ?></a>
-        <a class="side-link <?php echo $_sidebarActive==='objectifs'?'active':''; ?>" href="objectifs.php">Objectifs & Récompenses</a>
-        <a class="side-link <?php echo $_sidebarActive==='inscriptions'?'active':''; ?>" href="dashboard.php?tab=inscriptions"><?php echo t('bo_inscriptions'); ?></a>
-        <a class="side-link <?php echo $_sidebarActive==='inscriptions_list'?'active':''; ?>" href="dashboard.php?tab=inscriptions_list"><?php echo t('bo_inscriptions_list'); ?></a>
-        <a class="side-link" href="../FrontOffice/accueil.php"><?php echo t('bo_back'); ?></a>
+        <a class="side-link <?php echo $_sidebarActive==='objectifs'?'active':''; ?>" href="dashboard.php?tab=objectifs">Objectifs & Récompenses</a>
+        <a class="side-link <?php echo ($_sidebarActive==='inscriptions' || $_sidebarActive==='inscriptions_list' || $_sidebarActive==='voir_dossard')?'active':''; ?>" href="dashboard.php?tab=inscriptions"><?php echo t('bo_inscriptions'); ?></a>
+        <a class="side-link" href="../FrontOffice/accueil.php" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5; margin-top: 15px;"><?php echo t('bo_back'); ?></a>
         <a class="side-link" href="../FrontOffice/logout.php"><?php echo t('bo_logout'); ?></a>
     </nav>
 </aside>

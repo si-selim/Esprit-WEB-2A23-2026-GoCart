@@ -35,5 +35,10 @@ for ($i = 0; $i < count($_POST['numero']); $i++) {
     }
 }
 
-header("Location: ../View/FrontOffice/voirDossard.php?id_inscription=" . $id_inscription);
+$parcours_id = isset($_POST['parcours_id']) ? (int)$_POST['parcours_id'] : 0;
+$redirect_url = "../View/FrontOffice/voirDossard.php?id_inscription=" . $id_inscription;
+if ($parcours_id > 0) {
+    $redirect_url .= "&parcours_id=" . $parcours_id;
+}
+header("Location: " . $redirect_url);
 exit;

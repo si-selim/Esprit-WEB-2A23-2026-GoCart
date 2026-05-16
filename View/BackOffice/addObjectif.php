@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         1
     );
     $objCtrl->addObjectif($obj);
-    header('Location: objectifs.php');
+    header('Location: dashboard.php?tab=objectifs');
     exit;
 }
 $activeTab = 'objectifs';
@@ -78,7 +78,7 @@ $user = getCurrentUser();
                 <textarea name="description_recompense" rows="2"></textarea>
             </div>
             <button type="submit" class="btn btn-primary">Enregistrer</button>
-            <a href="objectifs.php" class="btn btn-secondary">Annuler</a>
+            <a href="dashboard.php?tab=objectifs" class="btn btn-secondary">Annuler</a>
         </form>
     </div>
 </main>

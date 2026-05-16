@@ -78,5 +78,17 @@ class InscriptionMarathonController {
             return false;
         }
     }
+
+    public function decrementerPlacesBy($id_marathon, $nb) {
+        $sql = "UPDATE marathon SET nb_places_dispo = nb_places_dispo - :nb WHERE id_marathon = :id AND nb_places_dispo >= :nb";
+        $db = config::getConnexion();
+        try {
+            $query = $db->prepare($sql);
+            $query->execute(['nb' => $nb, 'id' => $id_marathon]);
+            return $query->rowCount() > 0;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
 }
 ?>

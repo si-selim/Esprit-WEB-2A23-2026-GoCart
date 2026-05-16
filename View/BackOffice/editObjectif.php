@@ -9,7 +9,7 @@ if (!isAdmin()) { header('Location: ../FrontOffice/accueil.php'); exit; }
 $objCtrl = new ObjectifController();
 
 if (!isset($_GET['id'])) {
-    header('Location: objectifs.php');
+    header('Location: dashboard.php?tab=objectifs');
     exit;
 }
 
@@ -17,7 +17,7 @@ $id = (int)$_GET['id'];
 $objectif = $objCtrl->showObjectif($id);
 
 if (!$objectif) {
-    header('Location: objectifs.php');
+    header('Location: dashboard.php?tab=objectifs');
     exit;
 }
 
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $objectif['etat']
     );
     $objCtrl->updateObjectif($obj, $id);
-    header('Location: objectifs.php');
+    header('Location: dashboard.php?tab=objectifs');
     exit;
 }
 $activeTab = 'objectifs';
@@ -92,7 +92,7 @@ $user = getCurrentUser();
                 <textarea name="description_recompense" rows="2"><?php echo htmlspecialchars($objectif['description_recompense']); ?></textarea>
             </div>
             <button type="submit" class="btn btn-primary">Enregistrer</button>
-            <a href="objectifs.php" class="btn btn-secondary">Annuler</a>
+            <a href="dashboard.php?tab=objectifs" class="btn btn-secondary">Annuler</a>
         </form>
     </div>
 </main>

@@ -261,6 +261,16 @@ class UserController {
         }
     }
 
+    public function consumeSoldeAchat($id, $amountUsed) {
+        $db = config::getConnexion();
+        try {
+            $stmt = $db->prepare("UPDATE `user` SET solde_achat = GREATEST(0, COALESCE(solde_achat, 0) - :amount) WHERE id_user = :id");
+            $stmt->execute(['amount' => $amountUsed, 'id' => $id]);
+        } catch (Exception $e) {
+            error_log('Error consuming solde_achat: ' . $e->getMessage());
+        }
+    }
+
     public function showUser($id) {
         $sql = "SELECT * FROM `user` WHERE id_user = :id";
         $db = config::getConnexion();

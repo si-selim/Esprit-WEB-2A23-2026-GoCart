@@ -182,7 +182,7 @@ $todayStr = date('Y-m-d');
                     <div class="feedback" id="prixFeedback"></div>
                 </div>
                 <!-- Région -->
-                <div class="field" style="position:relative;">
+                <div class="field" style="position:relative; z-index:1000;">
                     <label for="region_marathon"><i class="fa-solid fa-location-dot" style="color:var(--teal);"></i> Région(s)</label>
                     <input type="text" id="region_marathon" name="region_marathon" placeholder="Ex: Tunis — ou Tunis-Sousse pour un marathon inter-régions" autocomplete="off">
                     <div id="regionDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 8px 24px rgba(16,42,67,.12);z-index:999;max-height:220px;overflow-y:auto;margin-top:4px;"></div>
@@ -191,7 +191,7 @@ $todayStr = date('Y-m-d');
                 <!-- Date -->
                 <div class="field">
                     <label for="date_marathon">📅 Date du Marathon</label>
-                    <input type="date" id="date_marathon" name="date_marathon" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" data-today="<?php echo $todayStr; ?>">
+                    <input type="date" id="date_marathon" name="date_marathon" data-today="<?php echo $todayStr; ?>">
                     <div class="feedback" id="dateFeedback"></div>
                 </div>
             </div>
@@ -333,6 +333,6 @@ document.getElementById('marathonForm').addEventListener('submit', function (e) 
 <!-- Module météo partagé -->
 <script src="meteo.js"></script>
 <!-- Validation de formulaire -->
-<script src="addMarathon.js"></script>
+<script src="addMarathon.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

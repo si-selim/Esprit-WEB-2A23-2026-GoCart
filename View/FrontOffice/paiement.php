@@ -25,6 +25,7 @@ $userCtrl = new UserController();
 $dbUser = $userCtrl->showUser($user['id_user'] ?? $user['id']);
 $nbreCommande = isset($dbUser['nbre_commande']) ? (int)$dbUser['nbre_commande'] : 0;
 $pendingDiscount = isset($dbUser['pending_discount']) ? (int)$dbUser['pending_discount'] : 0;
+$soldeAchat = isset($dbUser['solde_achat']) ? (float)$dbUser['solde_achat'] : 0;
 
 $isFirstOrder = ($nbreCommande === 0 && $type === 'commande');
 $totalDiscountPercent = 0;
@@ -168,15 +169,51 @@ $currentPage = 'paiement';
         <?php endif; ?>
 
         <div class="amount-display">
-            <?php if ($totalDiscountPercent > 0 && $montant > 0): ?>
+            <?php 
+            $finalMontant = $montant;
+            if ($totalDiscountPercent > 0 && $finalMontant > 0) {
+                $finalMontant = $finalMontant * (1 - ($totalDiscountPercent / 100));
+            }
+            $soldeUtilise = 0;
+            if ($soldeAchat > 0 && $type === 'commande') {
+                if ($finalMontant <= $soldeAchat) {
+                    $soldeUtilise = $finalMontant;
+                    $finalMontant = 0;
+                } else {
+                    $soldeUtilise = $soldeAchat;
+                    $finalMontant -= $soldeAchat;
+                }
+            }
+            ?>
+            
+            <?php if ($totalDiscountPercent > 0 || $soldeUtilise > 0): ?>
                 <div class="amount-label">Montant initial</div>
                 <div class="amount-value" style="font-size: 1.5rem; color: #64748b; text-decoration: line-through;"><?php echo number_format($montant, 2, ',', ' '); ?> TND</div>
                 
-                <div class="amount-label" style="color: #10b981; margin-top: 15px;">Montant à payer (Remise -<?php echo $totalDiscountPercent; ?>%)</div>
-                <div class="amount-value" style="color: #10b981;"><?php echo number_format($montant * (1 - ($totalDiscountPercent / 100)), 2, ',', ' '); ?> TND</div>
+                <?php if ($totalDiscountPercent > 0): ?>
+                <div class="amount-label" style="color: #10b981; margin-top: 15px;">Remise (-<?php echo $totalDiscountPercent; ?>%)</div>
+                <?php endif; ?>
+                
+                <?php if ($soldeUtilise > 0): ?>
+                <div class="amount-label" style="color: #10b981; margin-top: 15px;">Bon d'achat utilisé (-<?php echo number_format($soldeUtilise, 2, ',', ' '); ?> TND)</div>
+                <?php endif; ?>
+                
+                <div class="amount-label" style="margin-top: 15px;">Montant à payer</div>
+                <div class="amount-value" style="color: #10b981;"><?php echo number_format($finalMontant, 2, ',', ' '); ?> TND</div>
             <?php else: ?>
                 <div class="amount-label">Montant à payer</div>
                 <div class="amount-value"><?php echo number_format($montant, 2, ',', ' '); ?> TND</div>
+            <?php endif; ?>
+            
+            <?php if ($soldeAchat > 0 && $type === 'commande'): ?>
+                <div style="margin-top: 15px; font-size: 0.9rem; color: #0f766e; font-weight: 600; background: #ccfbf1; padding: 10px; border-radius: 8px;">
+                    <i class="fas fa-wallet"></i> Solde d'achat disponible : <?php echo number_format($soldeAchat, 2, ',', ' '); ?> TND
+                    <?php if ($soldeAchat > $soldeUtilise): ?>
+                        <br><span style="font-size: 0.8rem; color: #115e59;">(Il vous restera <?php echo number_format($soldeAchat - $soldeUtilise, 2, ',', ' '); ?> TND après ce paiement)</span>
+                    <?php else: ?>
+                        <br><span style="font-size: 0.8rem; color: #115e59;">(Votre solde sera entièrement utilisé)</span>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
         </div>
 

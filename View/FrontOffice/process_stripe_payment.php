@@ -52,6 +52,9 @@ $dbUser = $userCtrl->showUser($userId);
 $nbreCommande = isset($dbUser['nbre_commande']) ? (int)$dbUser['nbre_commande'] : 0;
 $pendingDiscount = isset($dbUser['pending_discount']) ? (int)$dbUser['pending_discount'] : 0;
 
+$soldeAchat = isset($dbUser['solde_achat']) ? (float)$dbUser['solde_achat'] : 0;
+$soldeUtilise = 0;
+
 $totalDiscountPercent = 0;
 if ($type === 'commande') {
     if ($nbreCommande === 0) {
@@ -63,9 +66,20 @@ if ($type === 'commande') {
     if ($totalDiscountPercent > 0) {
         $montant = $montant * (1 - ($totalDiscountPercent / 100));
     }
+
+    if ($soldeAchat > 0) {
+        if ($montant <= $soldeAchat) {
+            $soldeUtilise = $montant;
+            $montant = 0;
+        } else {
+            $soldeUtilise = $soldeAchat;
+            $montant -= $soldeAchat;
+        }
+    }
 }
 
-if (!$paymentMethodId || !$type || !$montant || ($type === 'marathon' && !$id)) {
+// Allow $montant to be 0 if fully discounted
+if (!$paymentMethodId || !$type || ($type === 'marathon' && !$id)) {
     http_response_code(400);
     echo json_encode(['error' => 'Paramètres manquants']);
     exit;
@@ -92,18 +106,22 @@ try {
             }
         }
 
-    $paymentIntent = $stripe->createAndConfirmPaymentIntent(
-        $montant,
-        'usd',
-        $paymentMethodId,
-        [
-            'user_id' => $userId,
-            'type' => $type,
-            'id' => $id,
-            'parcours_id' => $parcours_id,
-            'stand_id' => $stand_id
-        ]
-    );
+    if ($montant <= 0 && $type === 'commande') {
+        $paymentIntent = ['status' => 'succeeded'];
+    } else {
+        $paymentIntent = $stripe->createAndConfirmPaymentIntent(
+            $montant,
+            'usd',
+            $paymentMethodId,
+            [
+                'user_id' => $userId,
+                'type' => $type,
+                'id' => $id,
+                'parcours_id' => $parcours_id,
+                'stand_id' => $stand_id
+            ]
+        );
+    }
 
     if ($paymentIntent['status'] === 'succeeded') {
         // Paiement réussi, traiter l'inscription ou la commande
@@ -157,6 +175,9 @@ try {
                 $userCtrl->incrementNbreCommande($userId);
                 if ($totalDiscountPercent > 0 && $pendingDiscount > 0) {
                     $userCtrl->clearPendingDiscount($userId);
+                }
+                if ($soldeUtilise > 0) {
+                    $userCtrl->consumeSoldeAchat($userId, $soldeUtilise);
                 }
 
                 $_SESSION['cart'] = [];

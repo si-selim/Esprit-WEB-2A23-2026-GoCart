@@ -172,6 +172,22 @@ class ObjectifController {
                 $stmtUser = $db->prepare($sqlUser);
                 $stmtUser->execute(['discount' => $discount, 'userId' => $userId]);
             }
+
+            // Check if reward contains a flat amount discount (e.g. 50 TND)
+            if ($objectif && preg_match('/(\d+)\s*tnd/i', $objectif['recompense'], $matches)) {
+                $solde = (float)$matches[1];
+                $sqlUserSolde = "UPDATE user SET solde_achat = COALESCE(solde_achat, 0) + :solde WHERE id_user = :userId";
+                $stmtUserSolde = $db->prepare($sqlUserSolde);
+                $stmtUserSolde->execute(['solde' => $solde, 'userId' => $userId]);
+            }
+            
+            // Add XP based on target value
+            if ($objectif && isset($objectif['target_value'])) {
+                $xpEarned = (int)$objectif['target_value'] * 10;
+                $sqlUserXp = "UPDATE user SET xp = COALESCE(xp, 0) + :xp WHERE id_user = :userId";
+                $stmtUserXp = $db->prepare($sqlUserXp);
+                $stmtUserXp->execute(['xp' => $xpEarned, 'userId' => $userId]);
+            }
             
             $db->commit();
             return true;

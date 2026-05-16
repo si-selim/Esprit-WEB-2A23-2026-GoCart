@@ -206,7 +206,7 @@ $todayStr = date('Y-m-d');
                     <div class="feedback" id="prixFeedback"></div>
                 </div>
                 <!-- 5. Région -->
-                <div class="field" style="position:relative;">
+                <div class="field" style="position:relative; z-index:1000;">
                     <label for="region_marathon"><i class="fa-solid fa-location-dot" style="color:var(--teal);"></i> Région(s)</label>
                     <input type="text" id="region_marathon" name="region_marathon" value="<?php echo htmlspecialchars($data['region_marathon']); ?>" placeholder="Ex: Tunis — ou Tunis-Sousse" autocomplete="off">
                     <div id="regionDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 8px 24px rgba(16,42,67,.12);z-index:999;max-height:220px;overflow-y:auto;margin-top:4px;"></div>

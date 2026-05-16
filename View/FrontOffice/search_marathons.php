@@ -14,7 +14,15 @@ $mode    = $_GET['mode']    ?? 'cards';
 if ($mode === 'suggestions') {
     if ($search === '') { echo json_encode([]); exit; }
     $results = $controller->rechercherMarathon($search);
-    $names = array_map(fn($m) => $m['nom_marathon'], $results);
+    
+    // Filter out past marathons
+    $activeResults = [];
+    foreach ($results as $m) {
+        if (!empty($m['date_marathon']) && strtotime($m['date_marathon']) < strtotime('today')) continue;
+        $activeResults[] = $m;
+    }
+    
+    $names = array_map(fn($m) => $m['nom_marathon'], $activeResults);
     echo json_encode(array_values(array_unique($names)));
     exit;
 }
@@ -27,6 +35,14 @@ if ($search !== '') {
 } else {
     $marathons = $controller->afficherMarathon();
 }
+
+// Filter out past marathons
+$activeMarathons = [];
+foreach ($marathons as $m) {
+    if (!empty($m['date_marathon']) && strtotime($m['date_marathon']) < strtotime('today')) continue;
+    $activeMarathons[] = $m;
+}
+$marathons = $activeMarathons;
 
 $user = getCurrentUser();
 $role = $user['role'] ?? 'visiteur';

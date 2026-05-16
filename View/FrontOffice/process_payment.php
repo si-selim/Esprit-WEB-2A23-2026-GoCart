@@ -139,8 +139,29 @@ if ($type === 'commande') {
     $userCtrl = new UserController();
     $dbUser = $userCtrl->showUser($userId);
     $nbreCommande = isset($dbUser['nbre_commande']) ? (int)$dbUser['nbre_commande'] : 0;
+    $pendingDiscount = isset($dbUser['pending_discount']) ? (int)$dbUser['pending_discount'] : 0;
+    $soldeAchat = isset($dbUser['solde_achat']) ? (float)$dbUser['solde_achat'] : 0;
+    $soldeUtilise = 0;
+    $totalDiscountPercent = 0;
+
     if ($nbreCommande === 0) {
-        $montant = $montant * 0.90;
+        $totalDiscountPercent += 10;
+    }
+    if ($pendingDiscount > 0) {
+        $totalDiscountPercent += $pendingDiscount;
+    }
+    if ($totalDiscountPercent > 0) {
+        $montant = $montant * (1 - ($totalDiscountPercent / 100));
+    }
+
+    if ($soldeAchat > 0) {
+        if ($montant <= $soldeAchat) {
+            $soldeUtilise = $montant;
+            $montant = 0;
+        } else {
+            $soldeUtilise = $soldeAchat;
+            $montant -= $soldeAchat;
+        }
     }
 
 
@@ -184,6 +205,12 @@ if ($type === 'commande') {
 
                     $userCtrl = new UserController();
                     $userCtrl->incrementNbreCommande($userId);
+                    if ($totalDiscountPercent > 0 && $pendingDiscount > 0) {
+                        $userCtrl->clearPendingDiscount($userId);
+                    }
+                    if ($soldeUtilise > 0) {
+                        $userCtrl->consumeSoldeAchat($userId, $soldeUtilise);
+                    }
 
                     $_SESSION['cart'] = [];
                     $success = true;

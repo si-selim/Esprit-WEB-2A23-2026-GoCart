@@ -170,7 +170,11 @@ $role = $user['role'] ?? 'visiteur';
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 
 <div class="page">
-    <a class="back-link" href="listMarathons.php">← Retour aux marathons</a>
+    <?php if ($preselected_parcours_id > 0): ?>
+        <a class="back-link" href="detailParcours.php?id=<?php echo $preselected_parcours_id; ?>">← Retour au parcours</a>
+    <?php else: ?>
+        <a class="back-link" href="listMarathons.php">← Retour aux marathons</a>
+    <?php endif; ?>
 
     <div class="page-header">
         <h1>🏃‍♂️ Inscription au Marathon</h1>
@@ -359,7 +363,7 @@ $role = $user['role'] ?? 'visiteur';
                                             <i class="fa-solid fa-pen"></i> Sélectionner
                                         </button>
 
-                                        <a href="../FrontOffice/voirDossard.php?id_inscription=<?php echo $row['id_inscription']; ?>"
+                                        <a href="../FrontOffice/voirDossard.php?id_inscription=<?php echo $row['id_inscription']; ?><?php if($preselected_parcours_id > 0) echo '&parcours_id='.$preselected_parcours_id; ?>"
                                            class="btn btn-secondary btn-small">
                                             <i class="fa-solid fa-eye"></i> Voir
                                         </a>

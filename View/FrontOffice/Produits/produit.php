@@ -7,15 +7,37 @@ include '../../../Controller/LigneCommandeController.php';
 include '../../../Controller/ProduitController.php';
 include '../../../Controller/FavoriteController.php';
 include '../../../Controller/UserController.php';
+include '../../../Controller/StandController.php';
+include '../../../Controller/ParcoursController.php';
+include '../../../Controller/MarathonController.php';
 
 $prodCtrl = new ProduitController();
 $favCtrl = new FavoriteController();
 $userCtrl = new UserController();
+$standCtrl = new StandController();
+$pCtrl = new ParcoursController();
+$mCtrl = new MarathonController();
 
 $stand_id = isset($_GET['stand_id']) ? (int)$_GET['stand_id'] : null;
 $parcours_id = isset($_GET['parcours_id']) ? (int)$_GET['parcours_id'] : null;
 if (!$stand_id) {
     die('Stand ID requis.');
+}
+
+// Detect if the marathon linked to this stand is finished
+$marathonTermine = false;
+try {
+    if ($parcours_id) {
+        $parcours = $pCtrl->showParcours($parcours_id);
+        if ($parcours && !empty($parcours['id_marathon'])) {
+            $marathon = $mCtrl->showMarathon($parcours['id_marathon']);
+            if ($marathon && !empty($marathon['date_marathon'])) {
+                $marathonTermine = strtotime($marathon['date_marathon']) < strtotime('today');
+            }
+        }
+    }
+} catch (Exception $e) {
+    $marathonTermine = false;
 }
 
 $products = $prodCtrl->afficherProduitsParStand($stand_id);
@@ -59,6 +81,8 @@ $favoriteIds = array_column($userFavorites, 'ID_produit');
 
 $dbUser = $userCtrl->showUser($userId);
 $nbreCommande = isset($dbUser['nbre_commande']) ? (int)$dbUser['nbre_commande'] : 0;
+$pendingDiscount = isset($dbUser['pending_discount']) ? (int)$dbUser['pending_discount'] : 0;
+$soldeAchat = isset($dbUser['solde_achat']) ? (float)$dbUser['solde_achat'] : 0;
 $isFirstOrder = ($nbreCommande === 0);
 
 if (!isset($_SESSION['cart'])) {
@@ -264,9 +288,27 @@ $cartTotal = 0;
 foreach ($cart as $item) {
     $cartTotal += $item['quantite'] * $item['prix'];
 }
-$discount = 0;
+
+$totalDiscountPercent = 0;
 if ($isFirstOrder && $cartTotal > 0) {
-    $discount = $cartTotal * 0.10;
+    $totalDiscountPercent += 10;
+}
+if ($pendingDiscount > 0 && $cartTotal > 0) {
+    $totalDiscountPercent += $pendingDiscount;
+}
+
+$discountAmount = $cartTotal * ($totalDiscountPercent / 100);
+$cartAfterDiscount = $cartTotal - $discountAmount;
+
+$soldeUtilise = 0;
+if ($soldeAchat > 0 && $cartAfterDiscount > 0) {
+    if ($cartAfterDiscount <= $soldeAchat) {
+        $soldeUtilise = $cartAfterDiscount;
+        $cartAfterDiscount = 0;
+    } else {
+        $soldeUtilise = $soldeAchat;
+        $cartAfterDiscount -= $soldeAchat;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -602,7 +644,8 @@ if ($isFirstOrder && $cartTotal > 0) {
             </div>
 
             <div class="ai-input-group" style="display: flex; align-items: end;">
-                <button id="generateCartBtn" style="background: linear-gradient(135deg, var(--teal), #0d665e); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(15,118,110,0.2);">
+                <button id="generateCartBtn" style="background: <?php echo $marathonTermine ? 'linear-gradient(135deg, #94a3b8, #cbd5e1)' : 'linear-gradient(135deg, var(--teal), #0d665e)'; ?>; color: <?php echo $marathonTermine ? '#94a3b8' : 'white'; ?>; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: <?php echo $marathonTermine ? 'not-allowed' : 'pointer'; ?>; transition: all 0.3s; box-shadow: <?php echo $marathonTermine ? 'none' : '0 4px 15px rgba(15,118,110,0.2)'; ?>; opacity: <?php echo $marathonTermine ? '0.65' : '1'; ?>;"
+                    <?php if ($marathonTermine): ?>disabled title="Marathon terminé — fonctionnalité indisponible"<?php endif; ?>>
                     🧠 Générer le panier
                 </button>
             </div>
@@ -773,16 +816,28 @@ if ($isFirstOrder && $cartTotal > 0) {
                                     </div>
                                 <?php endforeach; ?>
                                 
-                                <?php if ($isFirstOrder && $cartTotal > 0): ?>
+                                <?php if ($totalDiscountPercent > 0 || $soldeUtilise > 0): ?>
                                     <div class="cart-total" style="color: #64748b; font-size: 1.1rem; border-top: none; padding-top: 15px; margin-top: 15px; border-top: 2px solid #f1f5f9;">
-                                        Sous-total: <span><?php echo number_format($cartTotal, 2, ',', ' '); ?> TND</span>
+                                        Sous-total: <span style="text-decoration: line-through;"><?php echo number_format($cartTotal, 2, ',', ' '); ?> TND</span>
                                     </div>
-                                    <div class="cart-total" style="color: #10b981; font-size: 1.1rem; border-top: none; padding-top: 5px; margin-top: 0;">
-                                        Remise 1ère commande (-10%) : -<?php echo number_format($discount, 2, ',', ' '); ?> TND
-                                    </div>
-                                    <div class="cart-total" style="border-top: none; padding-top: 5px; margin-top: 0;">Total à payer : <?php echo number_format($cartTotal - $discount, 2, ',', ' '); ?> TND</div>
+                                    <?php if ($totalDiscountPercent > 0): ?>
+                                        <div class="cart-total" style="color: #10b981; font-size: 1.1rem; border-top: none; padding-top: 5px; margin-top: 0;">
+                                            Remise (-<?php echo $totalDiscountPercent; ?>%) : -<?php echo number_format($discountAmount, 2, ',', ' '); ?> TND
+                                        </div>
+                                    <?php endif; ?>
+                                    <?php if ($soldeUtilise > 0): ?>
+                                        <div class="cart-total" style="color: #10b981; font-size: 1.1rem; border-top: none; padding-top: 5px; margin-top: 0;">
+                                            Bon d'achat : -<?php echo number_format($soldeUtilise, 2, ',', ' '); ?> TND
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="cart-total" style="border-top: none; padding-top: 5px; margin-top: 0;">Total à payer : <?php echo number_format($cartAfterDiscount, 2, ',', ' '); ?> TND</div>
                                 <?php else: ?>
                                     <div class="cart-total"><?php echo number_format($cartTotal, 2, ',', ' '); ?> TND</div>
+                                <?php endif; ?>
+                                <?php if ($soldeAchat > 0): ?>
+                                    <div style="margin-top: 10px; font-size: 0.85rem; color: #0f766e; font-weight: 600; text-align: right;">
+                                        Solde disponible : <?php echo number_format($soldeAchat, 2, ',', ' '); ?> TND
+                                    </div>
                                 <?php endif; ?>
                                 
                                 <div>

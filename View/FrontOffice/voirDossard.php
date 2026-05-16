@@ -5,6 +5,8 @@ require_once "../../Controller/DossardController.php";
 require_once "../../Controller/InscriptionController.php";
 
 $id = $_GET['id_inscription'] ?? 0;
+$parcours_id = isset($_GET['parcours_id']) ? (int)$_GET['parcours_id'] : 0;
+$back_url = $parcours_id > 0 ? "inscription.php?parcours_id=" . $parcours_id : "inscription.php";
 
 $dossardController     = new DossardController();
 $inscriptionController = new InscriptionController();
@@ -114,7 +116,7 @@ $user = getCurrentUser();
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 
 <div class="page">
-    <a class="back-link" href="inscription.php">← Retour aux inscriptions</a>
+    <a class="back-link" href="<?php echo $back_url; ?>">← Retour aux inscriptions</a>
 
     <div class="page-header">
         <h1>🎽 Dossards de l'inscription</h1>
@@ -189,7 +191,7 @@ $user = getCurrentUser();
             <a href="export_pdf.php?id_inscription=<?php echo $id; ?>" class="btn btn-primary">
                 <i class="fa-solid fa-file-pdf"></i> Exporter PDF
             </a>
-            <a href="inscription.php" class="btn btn-outlined">
+            <a href="<?php echo $back_url; ?>" class="btn btn-outlined">
                 <i class="fa-solid fa-arrow-left"></i> Retour
             </a>
         </div>

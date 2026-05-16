@@ -26,11 +26,11 @@
     <div class="footer-container">
         <h3>Rejoignez la communauté</h3>
         <div class="social-icons">
-            <a href="https://www.facebook.com/share/1CjR3F7HVx/" target="_blank" rel="noopener" class="icon-fb"><i class="fab fa-facebook"></i></a>
-            <a href="https://www.instagram.com/barcha_thon?igsh=MWo4NTNuamYyZXM2ZA==" target="_blank" rel="noopener" class="icon-ig"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.facebook.com/profile.php?id=61589536287454" target="_blank" rel="noopener" class="icon-fb"><i class="fab fa-facebook"></i></a>
+            <a href="https://www.instagram.com/barcha_thon/?hl=en" target="_blank" rel="noopener" class="icon-ig"><i class="fab fa-instagram"></i></a>
         </div>
         <div class="footer-info">
-            <p>contact@barchathon.tn | +216 22 684 630</p>
+            <p><a href="https://mail.google.com/mail/?view=cm&to=barchathon.service@gmail.com" target="_blank" rel="noopener" style="color:white;text-decoration:underline;">barchathon.service@gmail.com</a> | <a href="tel:+21622684630" style="color:white;text-decoration:underline;">+216 22 684 630</a></p>
             <hr class="footer-hr">
             <p>© 2026 <strong>BarchaThon</strong> — Passionnément Tunisien.</p>
         </div>

@@ -488,6 +488,7 @@ function initAutocomplete(inputId, type) {
 
     let _searchTimer = null;
     input.addEventListener('focus', () => {
+        input.parentElement.style.zIndex = '9999';
         showLocalSuggestions(input.value.trim(), dropdown, input, type);
     });
     input.addEventListener('input', () => {
@@ -499,6 +500,7 @@ function initAutocomplete(inputId, type) {
     document.addEventListener('click', (e) => {
         if (!input.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.style.display = 'none';
+            input.parentElement.style.zIndex = '1';
         }
     });
 }
@@ -1286,7 +1288,7 @@ function resetMap() {
     window._arriveeMarkerPlaced = false;
 
     // Vider les champs
-    ['point_depart','point_arrivee','distance'].forEach(id => {
+    ['point_depart','point_arrivee','distance','mapSearchInput'].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = '';
     });
     const diffEl = document.getElementById('difficulte');

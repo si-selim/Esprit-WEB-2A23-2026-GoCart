@@ -245,6 +245,14 @@ $role = $user['role'] ?? 'visiteur';
         <div class="map-toolbar">
           <button type="button" class="map-btn map-btn-undo" onclick="undoLastPoint()">↩️ Annuler dernier</button>
           <button type="button" class="map-btn map-btn-reset" onclick="resetMap()">🗑️ Réinitialiser</button>
+          
+          <div style="margin-left: auto; display: flex; flex-direction: column; align-items: flex-end;">
+              <div style="display: flex; gap: 6px;">
+                  <input type="text" id="mapSearchInput" placeholder="Chercher un lieu..." style="padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85rem; width: 180px;" onkeydown="if(event.key==='Enter') { event.preventDefault(); searchMapLocation(); }">
+                  <button type="button" class="map-btn" id="mapSearchBtn" style="background:#3b82f6; color:white; padding: 6px 12px;" onclick="searchMapLocation()">🔍</button>
+              </div>
+              <div id="mapSearchFeedback" style="font-size: 0.8rem; margin-top: 4px; display: none;"></div>
+          </div>
         </div>
         <div class="map-body">
           <div id="parcours-map"></div>
@@ -276,10 +284,55 @@ function onMarathonChange(sel){
     initMap(region);
 }
 document.addEventListener('DOMContentLoaded',function(){ initMap(MARATHON_REGION); });
+
+async function searchMapLocation() {
+    const query = document.getElementById('mapSearchInput').value.trim();
+    if (!query) return;
+    
+    const feedback = document.getElementById('mapSearchFeedback');
+    const btn = document.getElementById('mapSearchBtn');
+    
+    if(feedback) {
+        feedback.style.display = 'block';
+        feedback.style.color = '#64748b';
+        feedback.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Recherche en cours...';
+    }
+    if(btn) btn.disabled = true;
+
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query+', Tunisie')}&format=json&limit=1`);
+        const data = await res.json();
+        
+        if(btn) btn.disabled = false;
+        
+        if (data && data.length > 0) {
+            if(feedback) feedback.style.display = 'none';
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            if (typeof map !== 'undefined' && map) {
+                map.setView([lat, lon], 14);
+                const marker = L.marker([lat, lon]).addTo(map).bindPopup("Résultat : " + query).openPopup();
+                setTimeout(() => { if(map.hasLayer(marker)) map.removeLayer(marker); }, 4000);
+            }
+        } else {
+            if(feedback) {
+                feedback.style.color = '#dc2626';
+                feedback.innerHTML = '❌ Lieu non trouvé.';
+            }
+        }
+    } catch(e) {
+        if(btn) btn.disabled = false;
+        if(feedback) {
+            feedback.style.color = '#dc2626';
+            feedback.innerHTML = '❌ Erreur de recherche.';
+        }
+        console.error(e);
+    }
+}
 </script>
-<script src="parcours_map.js"></script>
-<script src="addParcours.js"></script>
-<script src="generateTrajet.js"></script>
+<script src="parcours_map.js?v=2"></script>
+<script src="addParcours.js?v=2"></script>
+<script src="generateTrajet.js?v=2"></script>
 <script>
 (function(){
     const diffSel = document.getElementById('difficulte');

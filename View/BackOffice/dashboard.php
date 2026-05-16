@@ -48,7 +48,7 @@ if (isset($_GET['delete_inscription'])) {
     require_once __DIR__ . '/../../Controller/InscriptionController.php';
     $iCtrlDel = new InscriptionController();
     $iCtrlDel->delete((int) $_GET['delete_inscription']);
-    header('Location: dashboard.php?tab=inscriptions_list');
+    header('Location: dashboard.php?tab=inscriptions');
     exit;
 }
 
@@ -95,6 +95,23 @@ if (isset($_GET['delete_lignes'])) {
     exit;
 }
 
+if (isset($_POST['delete_objectif_id'])) {
+    require_once __DIR__ . '/../../Controller/ObjectifController.php';
+    $objCtrl = new ObjectifController();
+    $objCtrl->deleteObjectif($_POST['delete_objectif_id']);
+    header('Location: dashboard.php?tab=objectifs');
+    exit;
+}
+
+if (isset($_POST['toggle_objectif_id'])) {
+    require_once __DIR__ . '/../../Controller/ObjectifController.php';
+    $objCtrl = new ObjectifController();
+    $etat = (int)$_POST['new_etat'];
+    $objCtrl->toggleEtat($_POST['toggle_objectif_id'], $etat);
+    header('Location: dashboard.php?tab=objectifs');
+    exit;
+}
+
 $activeTab = $_GET['tab'] ?? 'home';
 $marathons  = $mCtrl->afficherMarathon();
 $parcours   = $pCtrl->afficherParcours();
@@ -106,6 +123,14 @@ $searchM = $_GET['searchM'] ?? '';
 $filterRegion = $_GET['region'] ?? '';
 if ($searchM !== '') $marathons = $mCtrl->rechercherMarathon($searchM);
 elseif ($filterRegion !== '') $marathons = $mCtrl->filtrerMarathon($filterRegion);
+
+// Filter out past marathons for the dashboard view
+$activeMarathons = [];
+foreach ($marathons as $m) {
+    if (!empty($m['date_marathon']) && strtotime($m['date_marathon']) < strtotime('today')) continue;
+    $activeMarathons[] = $m;
+}
+$marathons = $activeMarathons;
 
 $searchP = $_GET['searchP'] ?? '';
 $filterDiff = $_GET['difficulte'] ?? '';
@@ -830,7 +855,16 @@ $currentPage = 'dashboard';
 
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-val"><?php echo count($mCtrl->afficherMarathon()); ?></div>
+            <div class="stat-val">
+                <?php 
+                    $allTotalM = $mCtrl->afficherMarathon();
+                    $activeCount = 0;
+                    foreach ($allTotalM as $mm) {
+                        if (empty($mm['date_marathon']) || strtotime($mm['date_marathon']) >= strtotime('today')) $activeCount++;
+                    }
+                    echo $activeCount; 
+                ?>
+            </div>
             <div class="stat-lbl">Marathons affichés</div>
         </div>
         <div class="stat-card">
@@ -1470,17 +1504,18 @@ $currentPage = 'dashboard';
             </table>
         </div>
     </section>
-<?php elseif ($activeTab === 'inscriptions'): 
+<?php elseif ($activeTab === 'inscriptions' || $activeTab === 'inscriptions_list'): 
     require_once __DIR__ . '/../../Controller/InscriptionController.php';
     $iCtrl = new InscriptionController();
     $stats = $iCtrl->getStats();
     $pay   = $iCtrl->getPaidStats();
+    $listeInscriptions = $iCtrl->getAll();
 ?>
 
 <div class="head fade-in">
     <div>
-        <h1>Statistiques des Inscriptions</h1>
-        <div class="muted">Analyse des inscriptions et des paiements aux marathons.</div>
+        <h1>Inscriptions</h1>
+        <div class="muted">Gestion globale des inscriptions aux marathons.</div>
     </div>
     <div class="actions">
         <span class="tag">Inscriptions</span>
@@ -1574,13 +1609,8 @@ new Chart(document.getElementById('chartPaiement'), {
     }
 });
 </script>
-<?php elseif ($activeTab === 'inscriptions_list'):
-    require_once __DIR__ . '/../../Controller/InscriptionController.php';
-    $iCtrl2 = new InscriptionController();
-    $listeInscriptions = $iCtrl2->getAll();
-?>
 
-<div class="head fade-in">
+<div class="head fade-in" style="margin-top: 40px;">
     <div>
         <h1>Gestion des Inscriptions</h1>
         <div class="muted">Liste complète des inscriptions aux marathons.</div>
@@ -1623,7 +1653,7 @@ new Chart(document.getElementById('chartPaiement'), {
                             <a href="dashboard.php?tab=voir_dossard&id_inscription=<?php echo $row['id_inscription']; ?>" 
    class="btn btn-secondary btn-sm">Voir dossard</a>
                             
-<a href="dashboard.php?tab=inscriptions_list&delete_inscription=<?php echo $row['id_inscription']; ?>"
+<a href="dashboard.php?tab=inscriptions&delete_inscription=<?php echo $row['id_inscription']; ?>"
    class="btn btn-danger btn-sm"
    onclick="return confirm('Supprimer cette inscription ?')">Supprimer</a>
                         </div>
@@ -1653,7 +1683,7 @@ new Chart(document.getElementById('chartPaiement'), {
         <div class="muted"><?php echo $total; ?> dossard(s) pour cette inscription.</div>
     </div>
     <div class="actions">
-        <a class="btn btn-secondary btn-sm" href="dashboard.php?tab=inscriptions_list">← Retour</a>
+        <a class="btn btn-sm" style="background:#475569; color:#fff;" href="dashboard.php?tab=inscriptions">← Retour</a>
         <a class="btn btn-primary btn-sm" href="../FrontOffice/export_pdf.php?id_inscription=<?php echo $id; ?>">Exporter PDF</a>
     </div>
 </div>
@@ -1718,6 +1748,77 @@ new Chart(document.getElementById('chartPaiement'), {
 </section>
 
 <?php endif; ?>
+
+<?php elseif ($activeTab === 'objectifs'):
+    require_once __DIR__ . '/../../Controller/ObjectifController.php';
+    $objCtrl = new ObjectifController();
+    $objectifs = $objCtrl->listObjectifs();
+?>
+
+<div class="head fade-in">
+    <div>
+        <h1>Gestion des Objectifs & Récompenses</h1>
+        <div class="muted">Créez et gérez les objectifs que les participants peuvent accomplir.</div>
+    </div>
+    <div class="actions">
+        <a href="addObjectif.php" class="btn btn-primary">Créer un objectif</a>
+    </div>
+</div>
+
+<section class="section-card fade-in">
+    <div class="table-shell">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Type</th>
+                    <th>Cible</th>
+                    <th>Récompense</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($objectifs)): ?>
+                    <tr><td colspan="7" style="text-align:center;color:var(--muted);">Aucun objectif trouvé.</td></tr>
+                <?php else: foreach ($objectifs as $obj): ?>
+                <tr>
+                    <td><?php echo $obj['id_objectif']; ?></td>
+                    <td><?php echo htmlspecialchars($obj['titre']); ?></td>
+                    <td><?php echo htmlspecialchars($obj['type_objectif']); ?></td>
+                    <td><?php echo htmlspecialchars($obj['target_value']); ?></td>
+                    <td><?php echo htmlspecialchars($obj['recompense']); ?></td>
+                    <td>
+                        <?php if ($obj['etat'] == 1): ?>
+                            <span class="tag" style="background:#dcfce7; color:#166534;">Actif</span>
+                        <?php else: ?>
+                            <span class="tag" style="background:#fee2e2; color:#991b1b;">Inactif</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <div class="table-actions">
+                            <form method="POST" style="margin:0;">
+                                <input type="hidden" name="csrf" value="<?php echo $csrfToken; ?>">
+                                <input type="hidden" name="toggle_objectif_id" value="<?php echo $obj['id_objectif']; ?>">
+                                <input type="hidden" name="new_etat" value="<?php echo $obj['etat'] == 1 ? 0 : 1; ?>">
+                                <button type="submit" class="btn btn-secondary btn-sm"><?php echo $obj['etat'] == 1 ? 'Désactiver' : 'Activer'; ?></button>
+                            </form>
+                            <a href="editObjectif.php?id=<?php echo $obj['id_objectif']; ?>" class="btn btn-primary btn-sm" style="background:#d97706;">Modifier</a>
+                            <form method="POST" style="margin:0;" onsubmit="return confirm('Supprimer cet objectif ?');">
+                                <input type="hidden" name="csrf" value="<?php echo $csrfToken; ?>">
+                                <input type="hidden" name="delete_objectif_id" value="<?php echo $obj['id_objectif']; ?>">
+                                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; endif; ?>
+            </tbody>
+        </table>
+    </div>
+</section>
+
 <?php elseif ($activeTab === 'sponsors'): ?>
 <main class="content">
             <div class="mobile-nav">

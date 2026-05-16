@@ -87,7 +87,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $last_id = $controller->add($inscription);
 
-        header("Location: ../View/FrontOffice/dossard.php?id_inscription=" . $last_id);
+        // ✅ Decrementer les places du marathon
+        require_once __DIR__ . "/../Controller/InscriptionMarathonController.php";
+        $parcoursInfo = $parcoursCtrl->showParcours($id_parcours);
+        if ($parcoursInfo && !empty($parcoursInfo['id_marathon'])) {
+            $inscMarathonCtrl = new InscriptionMarathonController();
+            $inscMarathonCtrl->decrementerPlacesBy($parcoursInfo['id_marathon'], $nb);
+        }
+
+        header("Location: ../View/FrontOffice/dossard.php?id_inscription=" . $last_id . "&parcours_id=" . $id_parcours);
         exit;
     }
 

@@ -19,6 +19,13 @@ if ($search !== '') {
     $marathons = $mCtrl->afficherMarathon();
 }
 
+$activeMarathons = [];
+foreach ($marathons as $m) {
+    if (!empty($m['date_marathon']) && strtotime($m['date_marathon']) < strtotime('today')) continue;
+    $activeMarathons[] = $m;
+}
+$marathons = $activeMarathons;
+
 ob_start();
 if (empty($marathons)): ?>
 <tr><td colspan="9" style="text-align:center;color:#627d98;padding:28px;">Aucun marathon trouvé.</td></tr>

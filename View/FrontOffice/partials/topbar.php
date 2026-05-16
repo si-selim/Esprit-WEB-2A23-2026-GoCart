@@ -248,12 +248,72 @@ $_otherLang   = $_currentLang === 'fr' ? 'en' : 'fr';
                 <a class="fo-link <?php echo $currentPage==='objectives'?'active':''; ?>" href="<?php echo $_frontBase; ?>objectives.php">Objectifs & Récompenses</a>
                 <a class="fo-link <?php echo $currentPage==='orders'?'active':''; ?>" href="<?php echo $_frontBase; ?>Mes commandes.php"><?php echo t('nav_my_orders'); ?></a>
                 <a class="fo-link <?php echo $currentPage==='profile'?'active':''; ?>" href="<?php echo $_frontBase; ?>profile.php"><?php echo t('nav_my_profile'); ?></a>
-                <span class="fo-user"><?php echo htmlspecialchars($user['nom']); ?> <span class="fo-role-badge"><?php echo t('role_participant'); ?></span></span>
+                <?php
+                // Fetch live XP from DB to ensure it's always up to date
+                $userXp = $user['xp'] ?? 0;
+                try {
+                    require_once __DIR__ . '/../../../config.php';
+                    $pdoTop = config::getConnexion();
+                    $stmtXp = $pdoTop->prepare("SELECT xp FROM user WHERE id_user = ?");
+                    $stmtXp->execute([getUserId()]);
+                    if ($resXp = $stmtXp->fetch()) {
+                        $userXp = (int)$resXp['xp'];
+                        $_SESSION['user']['xp'] = $userXp; // refresh session
+                    }
+                } catch (Exception $e) {}
+
+                $userRank = 'Bronze';
+                $userRankColor = '#cd7f32';
+                $nextRankXp = 100;
+                if ($userXp >= 1500) {
+                    $userRank = 'Challenger';
+                    $userRankColor = '#14b8a6'; // Emerald/Teal
+                    $nextRankXp = $userXp;
+                } elseif ($userXp >= 1000) {
+                    $userRank = 'Master';
+                    $userRankColor = '#d946ef'; // Fuchsia
+                    $nextRankXp = 1500;
+                } elseif ($userXp >= 600) {
+                    $userRank = 'Platinum';
+                    $userRankColor = '#94a3b8'; // Slate
+                    $nextRankXp = 1000;
+                } elseif ($userXp >= 300) {
+                    $userRank = 'Gold';
+                    $userRankColor = '#f59e0b'; // Amber/Gold
+                    $nextRankXp = 600;
+                } elseif ($userXp >= 100) {
+                    $userRank = 'Silver';
+                    $userRankColor = '#64748b'; // Slate gray
+                    $nextRankXp = 300;
+                }
+                $rankDisplay = $userRank === 'Challenger' ? "{$userXp} XP" : "{$userXp}/{$nextRankXp} XP";
+                ?>
+                <style>
+                    body::before {
+                        content: '';
+                        position: fixed;
+                        top: 0; left: 0; right: 0; height: 100vh;
+                        background: radial-gradient(circle at 50% 0%, <?php echo $userRankColor; ?> 0%, transparent 45%);
+                        opacity: 0.12;
+                        z-index: -1;
+                        pointer-events: none;
+                    }
+                    html[data-theme="dark"] body::before {
+                        opacity: 0.22;
+                    }
+                </style>
+                <a class="fo-user" href="<?php echo $_frontBase; ?>classement.php" style="pointer-events:auto; text-decoration:none; cursor:pointer;" title="Voir le classement">
+                    <?php echo htmlspecialchars($user['nom'] ?? ''); ?>
+                    <span class="fo-role-badge" style="background: <?php echo $userRankColor; ?>20; color: <?php echo $userRankColor; ?>; border: 1px solid <?php echo $userRankColor; ?>80; pointer-events:auto; cursor:pointer;">
+                        🏅 <?php echo $userRank; ?> (<?php echo $rankDisplay; ?>)
+                    </span>
+                </a>
                 <a class="fo-link" href="<?php echo $_frontBase; ?>logout.php"><?php echo t('nav_logout'); ?></a>
 
             <?php elseif ($role === 'organisateur'): ?>
                 <a class="fo-link <?php echo $currentPage==='sponsors'?'active':''; ?>" href="<?php echo $_frontBase; ?>mesSponsors.php"><?php echo t('nav_sponsors'); ?></a>
                 <a class="fo-link" href="<?php echo $_frontBase; ?>commandesorganisateur.php"><?php echo t('nav_my_orders'); ?></a>
+                <a class="fo-link <?php echo $currentPage==='participants'?'active':''; ?>" href="<?php echo $_frontBase; ?>participantsOrganisateur.php">Mes Participants</a>
                 <a class="fo-link <?php echo $currentPage==='profile'?'active':''; ?>" href="<?php echo $_frontBase; ?>profile.php"><?php echo t('nav_my_profile'); ?></a>
                 <span class="fo-user"><?php echo htmlspecialchars($user['nom']); ?> <span class="fo-role-badge"><?php echo t('role_organizer'); ?></span></span>
                 <a class="fo-link" href="<?php echo $_frontBase; ?>logout.php"><?php echo t('nav_logout'); ?></a>
